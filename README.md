@@ -11,15 +11,17 @@ A collection of custom skills for [Claude Code](https://docs.anthropic.com/en/do
 | **implement** | Executes a brief produced by `/plan-feature`. Claims beads, implements layer by layer, runs tests between steps. |
 | **validate** | Reviews completed implementation against the brief, beads, and `CONTEXT.md`. Reports issues — never fixes them directly. |
 | **bead-review** | Standalone bead housekeeping — status review, dependency management, stale/orphan cleanup. |
-| **grill-with-docs** | Stress-tests a plan against your domain model (`CONTEXT.md`, ADRs). Sharpens terminology inline. |
+| **grill-with-docs** | Stress-tests a plan against your domain model (`CONTEXT.md`). Sharpens terminology inline. |
 | **improve-codebase-architecture** | Finds deepening opportunities — refactors that turn shallow modules into deep ones for testability and AI-navigability. |
 
 ## Installation
 
 ### Prerequisites
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and working
-- Skills directory exists at `~/.claude/skills/` (Claude Code creates this automatically)
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and/or [Claude Code SDK (Codex)](https://docs.anthropic.com/en/docs/claude-code) installed
+- Skills directory exists (created automatically by each tool):
+  - Claude Code: `~/.claude/skills/`
+  - Codex: `~/.agents/skills/`
 
 ### Clone the repo
 
@@ -29,7 +31,9 @@ git clone <repo-url> ~/Documents/skills
 
 ### Create symlinks
 
-Each skill folder needs a symlink in `~/.claude/skills/`. Link the ones you want:
+Each skill folder needs a symlink in the skills directory. Link the ones you want:
+
+**Claude Code** (`~/.claude/skills/`):
 
 ```bash
 # Link all skills at once
@@ -39,7 +43,17 @@ for skill in ~/Documents/skills/*/; do
 done
 ```
 
-Or link individual skills:
+**Codex** (`~/.agents/skills/`):
+
+```bash
+# Link all skills at once
+for skill in ~/Documents/skills/*/; do
+  name=$(basename "$skill")
+  ln -sf "$skill" ~/.agents/skills/"$name"
+done
+```
+
+Or link individual skills (substitute the target directory as needed):
 
 ```bash
 ln -sf ~/Documents/skills/init-project     ~/.claude/skills/init-project
@@ -54,20 +68,25 @@ ln -sf ~/Documents/skills/improve-codebase-architecture ~/.claude/skills/improve
 ### Verify
 
 ```bash
-ls -la ~/.claude/skills/
+ls -la ~/.claude/skills/   # Claude Code
+ls -la ~/.agents/skills/   # Codex
 ```
 
-You should see symlinks pointing back to your cloned repo. Skills are available immediately — no restart needed.
+Symlinks should point back to cloned repo. Skills available immediately — no restart needed.
 
 ### Uninstall
 
-Remove the symlinks (not the repo):
+Remove symlinks (not the repo):
 
 ```bash
-rm ~/.claude/skills/init-project
-# ... or remove all at once
+# Claude Code
 for skill in ~/Documents/skills/*/; do
   rm -f ~/.claude/skills/"$(basename "$skill")"
+done
+
+# Codex
+for skill in ~/Documents/skills/*/; do
+  rm -f ~/.agents/skills/"$(basename "$skill")"
 done
 ```
 
@@ -84,8 +103,7 @@ Open Claude Code in your project directory and run:
 ```
 
 This explores your codebase and creates:
-- **`CONTEXT.md`** — domain glossary, architecture overview, key conventions
-- **`docs/adr/`** — directory for Architecture Decision Records
+- **`CONTEXT.md`** — domain glossary, architecture overview, key conventions, and recorded decisions
 - **Beads tracking** — lightweight task tracking via the `bd` CLI
 
 You only run this once per project. It's read-only — no code changes.
@@ -97,7 +115,7 @@ You only run this once per project. It's read-only — no code changes.
 ```
 
 The skill will:
-1. Read your `CONTEXT.md` and existing ADRs for domain context
+1. Read your `CONTEXT.md` for domain context and recorded decisions
 2. **Grill you** on design decisions one question at a time (email provider? verification link expiry? retry behavior?)
 3. Explore your codebase to find constraints and existing patterns
 4. Output a **brief** in `docs/briefs/` with implementation steps
@@ -130,7 +148,7 @@ The skill acts as an independent reviewer:
 2. Runs the full test suite
 3. Starts the local server and tests end-to-end behavior
 4. Creates new beads for any gaps found
-5. Gives a verdict: **SHIP**, **FIX THEN SHIP**, or **SEND BACK**
+5. Gives a verdict: **SHIP**, **FIX**, or **SEND BACK**
 
 It never fixes issues itself — it reports what's wrong and recommends next steps.
 
@@ -157,7 +175,7 @@ Repeat until you get **SHIP**, then commit.
 These skills complement the core loop:
 
 - **`/bead-review`** — Check bead health between sessions. Find stale beads, orphaned work, dependency issues.
-- **`/grill-with-docs`** — Stress-test any plan against your `CONTEXT.md` and ADRs before committing to it.
+- **`/grill-with-docs`** — Stress-test any plan against your `CONTEXT.md` before committing to it.
 - **`/improve-codebase-architecture`** — Find refactoring opportunities. Run periodically to keep the codebase AI-navigable.
 
 ## Skill structure
