@@ -36,6 +36,7 @@ Focus areas:
 - **What's the fallback chain?** Every external call needs a degradation path.
 - **What changes for each user state?** Anonymous, opt-out, personalized, error.
 - **What's the cache/performance story?** TTLs, warming, stale-while-revalidate.
+- **What breaks downstream?** Trace new inputs through the full processing pipeline. Each stage may have assumptions (filters, validators, serializers) that silently drop or corrupt data the pipeline hasn't seen before.
 
 ### 3. Assess architectural impact
 
@@ -68,6 +69,8 @@ bead-xxx  Description
   └── bead-aaa  Description
 ```
 
+For standalone bead review/cleanup without planning a new feature, use `/bead-review`.
+
 ### 5. Update CONTEXT.md
 
 If new domain terms were resolved during grilling, update `CONTEXT.md` inline using the format in [CONTEXT-FORMAT.md](../grill-with-docs/CONTEXT-FORMAT.md). Only add terms specific to this project's domain — not general programming concepts.
@@ -88,3 +91,19 @@ After beads are created and user approves, generate a **coding agent brief** —
 Write to `docs/briefs/<feature-name>.md` AND show a summary in conversation.
 
 Brief format — see [BRIEF-FORMAT.md](BRIEF-FORMAT.md).
+
+## Final message: copy-paste handoff
+
+Planning is done. The user picks ONE implementation agent — do not implement yourself.
+
+Provide both handoff formats so the user can paste into their chosen agent:
+
+**For Claude Code (`/implement` skill):**
+```
+/implement docs/briefs/<feature-name>.md
+```
+
+**For Codex or other agents:**
+```
+Read the brief at docs/briefs/<feature-name>.md and implement beads <id-1>, <id-2>, ... in that order. Run the test suite after each bead. Do not make design decisions — the brief has all constraints.
+```

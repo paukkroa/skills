@@ -29,7 +29,7 @@ Before writing any code:
 
 - Run `bd show <id>` for each bead in the brief — verify they exist and are open
 - Check that files referenced in the brief still exist at the expected paths
-- Run the test suite to establish a passing baseline: `uv run pytest src/tests/ -q`
+- Run the test suite to establish a passing baseline (check `CONTEXT.md` or `bd recall test-command` for the exact command)
 - Note the test count — you must not reduce it
 
 ### 3. Execute bead by bead
@@ -42,10 +42,7 @@ Follow the execution order from the brief. For each bead:
 
 **Implement:** Follow the numbered steps in the brief. Use existing patterns — the brief points to examples in the codebase. Follow them exactly.
 
-**Verify:** Run tests after each bead:
-```bash
-uv run pytest src/tests/ -q
-```
+**Verify:** Run the project's test suite after each bead.
 - All tests must pass before moving to the next bead
 - If tests fail, fix within 2 attempts. If still failing, stop and report.
 
@@ -75,7 +72,7 @@ After all beads are closed:
 
 These apply to every implementation:
 
-- `uv run` instead of `python` or `python3`
+- Use the project's configured runner (check `CONTEXT.md` or `bd recall runner`)
 - Imports at top of files, never inside functions
 - `__init__.py` files: only re-exports, never class/function definitions
 - No comments unless the WHY is non-obvious
@@ -91,3 +88,5 @@ If you hit a problem the brief doesn't cover:
 2. Show the error or unexpected behavior
 3. State what you think the issue is
 4. **Stop and wait** — do not keep trying
+
+If the problem is bead-related (wrong dependency, stale bead, missing bead), use `/bead-review` instead of trying to fix it yourself.

@@ -9,10 +9,11 @@ Review completed implementation against the original spec and beads. Focus is **
 
 ## Hard rules
 
-1. **Do NOT fix bugs yourself.** Report them. The user decides whether to fix manually or send back to the coding agent.
+1. **Do NOT fix bugs yourself.** No code edits, no config changes, no YAML tweaks, no "temporary" workarounds. Report what's wrong and how to fix it. The user decides whether to fix manually or send back to the coding agent. Even obvious one-line fixes go through the process — create a bead, describe the fix direction, recommend FIX THEN SHIP or SEND BACK.
 2. **Max 2 debug attempts** when investigating an issue. If root cause isn't clear, describe what you see and ask the user.
 3. **Use beads for tracking.** Create new beads for gaps found. Close beads that are verified complete.
 4. **Functional focus.** Does the feature work as specified? Does anything break downstream? Not: is the code pretty?
+5. **Fresh context.** Work from the brief, beads, and git diff only. Do not rely on the implementation conversation — you are a separate verifier, not the same agent that wrote the code.
 
 ## Process
 
@@ -36,9 +37,7 @@ Verify against bead descriptions:
 
 ### 3. Run tests
 
-```bash
-uv run pytest src/tests/ -x -q
-```
+Run the project's test suite (check `CONTEXT.md` or `bd recall test-command` for the exact command).
 
 If tests fail:
 - Read the failure output
@@ -49,30 +48,30 @@ If tests pass, note the count and move on.
 
 ### 4. Functional verification
 
-This is the core of validation. Start the local server and test the feature end-to-end:
+This is the core of validation — do NOT skip it. Unit tests verify code correctness, not feature correctness. Start the local server and test the feature end-to-end:
 
-**Start server:**
-```bash
-make local-run
-```
+**Start the local server** using the project's run command (check `CONTEXT.md` or `bd recall run-command`).
+
+**Check against Acceptance Criteria:** If the brief has an Acceptance Criteria section, verify each assertion. These are the primary pass/fail criteria.
 
 **Test each scenario from the spec:**
 - Happy path with expected inputs
-- Edge cases identified during planning (anonymous users, opt-out, missing data)
+- Edge cases identified during planning
 - Fallback/degradation scenarios
-- Verify logs show correct state (scoring_fallback, x-request-id, timing)
+- Error handling and boundary conditions
 
 **Check downstream impact:**
-- Do existing scoring methods still work? (personalized, pass_through, random)
-- Do business rules still execute?
-- Does the page scorer still run when it should?
+- Do existing features still work as before?
 - Any new warnings or errors in logs that weren't there before?
+- Does the change introduce regressions in related modules?
+
+**When external data is stale or unavailable:** If cached/upstream data doesn't include the new content needed for testing, verify code correctness through alternative means (direct API calls, different endpoints, log inspection). Note the limitation in the report — don't modify code or config to work around it.
 
 Report findings as a table:
 
 | Scenario | Expected | Actual | Status |
 |---|---|---|---|
-| Anonymous cache hit | 0ms scorer, scoring_fallback=anonymous | ... | PASS/FAIL |
+| Happy path | <from spec> | ... | PASS/FAIL |
 
 ### 5. Architectural review
 
@@ -108,6 +107,7 @@ Present a structured report:
 1. <issue description> — severity: critical/minor
    - <root cause if identified>
    - <suggested fix direction>
+   - <failed approaches, if any — what was tried and why it didn't work>
 
 ### Architectural Notes
 - <observations, not blockers>
@@ -127,6 +127,8 @@ For any issue found:
 - Architectural: create bead with priority 4
 
 Close beads that are fully verified. Update partially-complete beads with notes on what's remaining.
+
+For larger bead hygiene issues (many stale beads, dependency tangles), hand off to `/bead-review`.
 
 ### 8. Auto-generate fix brief (if SEND BACK)
 

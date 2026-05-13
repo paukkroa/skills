@@ -92,7 +92,7 @@ Check that the plan → implement → validate pipeline is ready:
 - [ ] Build command works (identify and record it)
 - [ ] Test command works (identify, record, note current pass count)
 - [ ] Local run command works (identify and record it)
-- [ ] Skills available: `/plan`, `/implement`, `/validate`
+- [ ] Skills available: `/plan-feature`, `/implement`, `/validate`, `/bead-review`
 
 Record build/test/run commands for future reference.
 
