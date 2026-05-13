@@ -9,7 +9,9 @@ Review completed implementation against the original spec and beads. Focus is **
 
 ## Hard rules
 
-1. **Do NOT fix bugs yourself.** No code edits, no config changes, no YAML tweaks, no "temporary" workarounds. Report what's wrong and how to fix it. The user decides whether to fix manually or send back to the coding agent. Even obvious one-line fixes go through the process — create a bead, describe the fix direction, recommend FIX THEN SHIP or SEND BACK.
+1. **Do NOT fix bugs yourself.** No code edits, no config changes, no YAML tweaks, no "temporary" workarounds. Report what's wrong and how to fix it. The user decides whether to fix manually or send back to the coding agent. Even obvious one-line fixes go through the process — create a bead, describe the fix direction, recommend FIX or SEND BACK.
+   - **FIX** = implementation bugs, minor gaps. The design is sound, the code just needs fixes. Auto-generate a fix brief (step 8).
+   - **SEND BACK** = design is wrong, scope is wrong, approach is wrong. The brief itself was flawed. Explain what's wrong with the design so the user can re-plan with `/plan-feature` (step 9).
 2. **Max 2 debug attempts** when investigating an issue. If root cause isn't clear, describe what you see and ask the user.
 3. **Use beads for tracking.** Create new beads for gaps found. Close beads that are verified complete.
 4. **Functional focus.** Does the feature work as specified? Does anything break downstream? Not: is the code pretty?
@@ -116,7 +118,16 @@ Present a structured report:
 - <new terms or corrections>
 
 ### Recommendation
-SHIP / SEND_BACK_TO_CODING_AGENT / ASK_USER_FOR_CLARIFICATION
+SHIP / FIX / SEND BACK
+
+- **SHIP**: Feature works as specified. Commit.
+- **FIX**: Implementation bugs or minor gaps. Design is sound. Fix brief auto-generated at `docs/briefs/<feature>-fix.md` — hand to `/implement`.
+- **SEND BACK**: Design, scope, or approach is fundamentally wrong. Re-plan needed. Hand the Design Issues section below to `/plan-feature`.
+
+### Design Issues (SEND BACK only)
+- What's wrong with the current design
+- Why re-implementing won't fix it
+- What needs to change at the planning level
 ```
 
 ### 7. Create beads for gaps
@@ -130,9 +141,9 @@ Close beads that are fully verified. Update partially-complete beads with notes 
 
 For larger bead hygiene issues (many stale beads, dependency tangles), hand off to `/bead-review`.
 
-### 8. Auto-generate fix brief (if SEND BACK)
+### 8. Auto-generate fix brief (if FIX)
 
-When the recommendation is **SEND BACK TO CODING AGENT**, automatically generate a fix brief:
+When the recommendation is **FIX**, automatically generate a fix brief:
 
 - Create/update beads for each issue found (step 7)
 - Read the current codebase state (files changed, current line numbers)
@@ -142,10 +153,21 @@ When the recommendation is **SEND BACK TO CODING AGENT**, automatically generate
   - What was attempted and why it's wrong (from the validation report)
   - Exact file paths and line numbers in the CURRENT state (post-implementation, not pre)
   - Test commands to verify each fix
-- Show the brief path in conversation so the user can hand it to Codex immediately
+- Show the brief path in conversation so the user can hand it to `/implement` immediately
 
-This closes the loop: `/validate` → fix brief → Codex → `/validate` again.
+This closes the loop: `/validate` → fix brief → `/implement` → `/validate` again.
 
-### 9. Update CONTEXT.md
+### 9. Explain design issues (if SEND BACK)
+
+When the recommendation is **SEND BACK**, the problem is at the design level — re-implementing the same brief won't fix it. Do NOT generate a fix brief. Instead:
+
+- Explain what's wrong with the current design or approach
+- Explain why more implementation won't solve it (wrong abstraction, missing requirement, incorrect assumption, scope mismatch)
+- Reference the specific brief sections or bead specs that need rethinking
+- Suggest what questions `/plan-feature` should resolve in the next round
+
+The user takes this back to `/plan-feature` for re-scoping. The planner produces a new brief, then the cycle restarts.
+
+### 10. Update CONTEXT.md
 
 If the implementation introduced new domain concepts or changed existing ones, update `CONTEXT.md` using [CONTEXT-FORMAT.md](../grill-with-docs/CONTEXT-FORMAT.md).
