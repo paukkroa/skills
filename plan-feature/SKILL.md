@@ -98,12 +98,12 @@ Planning is done. The user picks ONE implementation agent — do not implement y
 
 Provide both handoff formats so the user can paste into their chosen agent:
 
-**For Claude Code (`/implement` skill):**
+**For agents with the `/implement` skill:**
 ```
 /implement docs/briefs/<feature-name>.md
 ```
 
-**For Codex or other agents:**
+**For other agents:**
 ```
 Read the brief at docs/briefs/<feature-name>.md and implement beads <id-1>, <id-2>, ... in that order. Run the test suite after each bead. Do not make design decisions — the brief has all constraints.
 ```

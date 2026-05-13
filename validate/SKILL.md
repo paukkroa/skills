@@ -116,7 +116,7 @@ Present a structured report:
 - <new terms or corrections>
 
 ### Recommendation
-SHIP / FIX THEN SHIP / SEND BACK TO CODING AGENT
+SHIP / SEND_BACK_TO_CODING_AGENT / ASK_USER_FOR_CLARIFICATION
 ```
 
 ### 7. Create beads for gaps
