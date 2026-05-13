@@ -18,7 +18,7 @@ Convert business requirements into implementation-ready specs. Output is beads +
 
 ### 1. Understand the domain
 
-Read `CONTEXT.md` for domain glossary and architecture. Read relevant ADRs in `docs/adr/`. Run `bd ready` and `bd list --status=open` to see existing work.
+Read `CONTEXT.md` for domain glossary, architecture, and recorded decisions. Run `bd ready` and `bd list --status=open` to see existing work.
 
 If any term in the user's request conflicts with `CONTEXT.md`, call it out: _"Your glossary defines X as Y, but you seem to mean Z — which is it?"_
 
@@ -75,14 +75,9 @@ For standalone bead review/cleanup without planning a new feature, use `/bead-re
 
 If new domain terms were resolved during grilling, update `CONTEXT.md` inline using the format in [CONTEXT-FORMAT.md](../grill-with-docs/CONTEXT-FORMAT.md). Only add terms specific to this project's domain — not general programming concepts.
 
-### 6. Offer ADRs sparingly
+### 6. Record decisions in CONTEXT.md
 
-Only offer an ADR when ALL three conditions are met:
-1. Hard to reverse
-2. Surprising without context
-3. Result of a real trade-off with genuine alternatives
-
-Use [ADR-FORMAT.md](../grill-with-docs/ADR-FORMAT.md).
+When a design decision during grilling is hard to reverse, surprising without context, and the result of a real trade-off — record it in `CONTEXT.md` under the Decisions section. This keeps all project knowledge in one place.
 
 ## Output: coding agent brief
 

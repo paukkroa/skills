@@ -9,7 +9,7 @@ Review completed implementation against the original spec and beads. Focus is **
 
 ## Hard rules
 
-1. **Do NOT fix bugs yourself.** No code edits, no config changes, no YAML tweaks, no "temporary" workarounds. Report what's wrong and how to fix it. The user decides whether to fix manually or send back to the coding agent. Even obvious one-line fixes go through the process — create a bead, describe the fix direction, recommend FIX or SEND BACK.
+1. **Do NOT fix bugs yourself.** No code edits, no config changes, no YAML tweaks, no "temporary" workarounds. Report what's wrong and how to fix it. The user decides whether to fix manually or send back to the coding agent. Even obvious one-line fixes go through the process — create a bead, describe the fix direction, recommend SHIP, FIX, or SEND BACK.
    - **FIX** = implementation bugs, minor gaps. The design is sound, the code just needs fixes. Auto-generate a fix brief (step 8).
    - **SEND BACK** = design is wrong, scope is wrong, approach is wrong. The brief itself was flawed. Explain what's wrong with the design so the user can re-plan with `/plan-feature` (step 9).
 2. **Max 2 debug attempts** when investigating an issue. If root cause isn't clear, describe what you see and ask the user.

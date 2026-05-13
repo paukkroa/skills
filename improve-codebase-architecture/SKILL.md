@@ -1,6 +1,6 @@
 ---
 name: improve-codebase-architecture
-description: Find deepening opportunities in a codebase, informed by the domain language in CONTEXT.md and the decisions in docs/adr/. Use when the user wants to improve architecture, find refactoring opportunities, consolidate tightly-coupled modules, or make a codebase more testable and AI-navigable.
+description: Find deepening opportunities in a codebase, informed by the domain language in CONTEXT.md. Use when the user wants to improve architecture, find refactoring opportunities, consolidate tightly-coupled modules, or make a codebase more testable and AI-navigable.
 ---
 
 # Improve Codebase Architecture
@@ -26,13 +26,13 @@ Key principles (see [LANGUAGE.md](LANGUAGE.md) for the full list):
 - **The interface is the test surface.**
 - **One adapter = hypothetical seam. Two adapters = real seam.**
 
-This skill is _informed_ by the project's domain model. The domain language gives names to good seams; ADRs record decisions the skill should not re-litigate.
+This skill is _informed_ by the project's domain model. The domain language gives names to good seams; decisions recorded in `CONTEXT.md` are ones the skill should not re-litigate.
 
 ## Process
 
 ### 1. Explore
 
-Read the project's domain glossary and any ADRs in the area you're touching first.
+Read `CONTEXT.md` for domain glossary, architecture, and recorded decisions.
 
 Then use the Agent tool with `subagent_type=Explore` to walk the codebase. Don't follow rigid heuristics — explore organically and note where you experience friction:
 
@@ -55,7 +55,7 @@ Present a numbered list of deepening opportunities. For each candidate:
 
 **Use CONTEXT.md vocabulary for the domain, and [LANGUAGE.md](LANGUAGE.md) vocabulary for the architecture.** If `CONTEXT.md` defines "Order," talk about "the Order intake module" — not "the FooBarHandler," and not "the Order service."
 
-**ADR conflicts**: if a candidate contradicts an existing ADR, only surface it when the friction is real enough to warrant revisiting the ADR. Mark it clearly (e.g. _"contradicts ADR-0007 — but worth reopening because…"_). Don't list every theoretical refactor an ADR forbids.
+**Decision conflicts**: if a candidate contradicts a recorded decision in `CONTEXT.md`, only surface it when the friction is real enough to warrant revisiting. Mark it clearly (e.g. _"contradicts the decision to use X — but worth reopening because…"_). Don't list every theoretical refactor a prior decision forbids.
 
 Do NOT propose interfaces yet. Ask the user: "Which of these would you like to explore?"
 
@@ -67,5 +67,15 @@ Side effects happen inline as decisions crystallize:
 
 - **Naming a deepened module after a concept not in `CONTEXT.md`?** Add the term to `CONTEXT.md` — same discipline as `/grill-with-docs` (see [CONTEXT-FORMAT.md](../grill-with-docs/CONTEXT-FORMAT.md)). Create the file lazily if it doesn't exist.
 - **Sharpening a fuzzy term during the conversation?** Update `CONTEXT.md` right there.
-- **User rejects the candidate with a load-bearing reason?** Offer an ADR, framed as: _"Want me to record this as an ADR so future architecture reviews don't re-suggest it?"_ Only offer when the reason would actually be needed by a future explorer to avoid re-suggesting the same thing — skip ephemeral reasons ("not worth it right now") and self-evident ones. See [ADR-FORMAT.md](../grill-with-docs/ADR-FORMAT.md).
+- **User rejects the candidate with a load-bearing reason?** Record it in `CONTEXT.md` under the Decisions section so future architecture reviews don't re-suggest it. Only record when the reason would actually be needed by a future explorer — skip ephemeral reasons ("not worth it right now") and self-evident ones.
 - **Want to explore alternative interfaces for the deepened module?** See [INTERFACE-DESIGN.md](INTERFACE-DESIGN.md).
+
+### 4. Handoff to the workflow
+
+Once a deepening opportunity is grilled and agreed on, hand off to the plan → implement → validate loop:
+
+- Suggest the user run `/plan-feature` with the agreed refactoring scope
+- The planner will create beads and a brief for the coding agent
+- Do NOT create beads or briefs yourself — that's `/plan-feature`'s job
+
+This skill identifies *what* to improve. The workflow skills handle *how* to implement it.

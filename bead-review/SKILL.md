@@ -19,8 +19,7 @@ Standalone bead management. Review status, update beads, manage dependencies, fi
 
 ### 1. Load context
 
-Read `CONTEXT.md` for domain vocabulary.
-Read relevant ADRs in `docs/adr/`.
+Read `CONTEXT.md` for domain vocabulary and recorded decisions.
 Run `bd prime` if available to recover prior session context.
 
 ### 2. Bead health check

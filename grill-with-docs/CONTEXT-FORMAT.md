@@ -34,6 +34,13 @@ _Avoid_: Client, buyer, account
 ## Flagged ambiguities
 
 - "account" was used to mean both **Customer** and **User** — resolved: these are distinct concepts.
+
+## Decisions
+
+Record architectural and design decisions that are hard to reverse, surprising without context, and the result of a real trade-off. Each entry is a short paragraph: what was decided and why.
+
+- **Event-sourced write model, projected read model**: Orders are event-sourced for auditability; the read model is projected into Postgres for query performance. We considered a single CRUD model but need the full event history for compliance.
+- **Domain events over synchronous HTTP between contexts**: Ordering and Billing communicate via events, not direct calls. Decouples deployment and allows each context to evolve independently.
 ```
 
 ## Rules

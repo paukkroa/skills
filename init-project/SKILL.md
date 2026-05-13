@@ -22,7 +22,7 @@ Use the Explore agent for broad discovery:
 
 - Project structure (languages, frameworks, package managers, entry points)
 - Build/test/run commands (Makefile, package.json scripts, pyproject.toml)
-- Existing documentation (README, docs/, ADRs, specs)
+- Existing documentation (README, docs/, specs)
 - Configuration patterns (env vars, YAML configs, settings files)
 - Test structure (framework, location, how to run, current count)
 - CI/CD pipeline (if visible)
@@ -60,7 +60,6 @@ Look for:
 - Product specs, PRDs, requirement docs (docs/, specs/, any markdown)
 - API documentation (OpenAPI, Swagger)
 - Architecture docs, diagrams
-- Existing ADRs in `docs/adr/`
 
 Summarize what exists and what each document covers.
 
@@ -115,7 +114,6 @@ Record build/test/run commands for future reference.
 ### Documentation Found
 - CONTEXT.md: created/updated/verified
 - Specs: <list>
-- ADRs: <list or "none">
 
 ### Beads Status
 - Open: X
