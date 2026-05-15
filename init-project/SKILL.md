@@ -45,12 +45,25 @@ If `CONTEXT.md` already exists, read it and verify it matches the current codeba
 
 ### 3. Set up beads
 
-Run `bd doctor` to check beads health. If beads isn't initialized:
-- Run `bd init` or guide the user through setup
-- Verify `bd ready`, `bd list`, `bd create` work
+First, ensure beads is up to date:
+- Run `bd upgrade status` to check if a newer version was installed
+- If upgraded, run `bd upgrade review` to see what changed, then `bd upgrade ack`
+
+Run `bd doctor` to check beads health. If beads isn't initialized, ask the user:
+
+**Database location:**
+- **Local** (default) → `bd init`
+- **Remote server** (when a tunnel exists to the actual database server) →
+  ```bash
+  bd init --server --external --database remote_beads_project --server-host 127.0.0.1 --server-port 13306
+  ```
+  Ask the user for the database name, host, and port if they differ from defaults.
+
+After init, verify `bd ready`, `bd list`, `bd create` work.
 
 If beads already exists:
-- Run `bd stats` for project health overview
+- Run `bd upgrade status` to check for version changes
+- Run `bd status` for project health overview
 - Run `bd ready` to see available work
 - Run `bd stale` and `bd orphans` for hygiene issues
 
@@ -148,9 +161,13 @@ Ask the user about their setup preferences:
 - Should `.claude/skills/` and `.claude/briefs/` be git-ignored? (Yes if symlinked, maybe not if copied)
 
 **Beads persistence:**
-- Local only (default `bd init`) or remote Dolt?
-  - If remote: ask for Dolt remote URL, run `bd remote add origin <url>`
-  - If team uses shared beads: `bd clone <url>` instead of `bd init`
+- Local only (default `bd init`) or remote server?
+  - If remote server (tunnel exists):
+    ```bash
+    bd init --server --external --database <db_name> --server-host 127.0.0.1 --server-port 13306
+    ```
+    Ask for database name, host, and port.
+  - If team uses shared beads via Dolt remote: `bd clone <url>` instead of `bd init`
 - Should `.beads/` / `.dolt/` be git-ignored? (Usually yes — beads has its own versioning)
 
 **What to add to .gitignore:**
