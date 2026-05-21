@@ -1,6 +1,7 @@
 ---
 name: improve-codebase-architecture
 description: Find deepening opportunities in a codebase, informed by the domain language in CONTEXT.md. Use when the user wants to improve architecture, find refactoring opportunities, consolidate tightly-coupled modules, or make a codebase more testable and AI-navigable.
+attribution: Derived from Matt Pocock's skills (https://github.com/mattpocock/skills). All functional credit goes to Matt Pocock.
 ---
 
 # Improve Codebase Architecture

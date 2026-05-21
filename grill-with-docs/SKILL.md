@@ -1,6 +1,7 @@
 ---
 name: grill-with-docs
 description: Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates CONTEXT.md inline as decisions crystallise. Use when user wants to stress-test a plan against their project's language and documented decisions.
+attribution: Derived from Matt Pocock's skills (https://github.com/mattpocock/skills). All functional credit goes to Matt Pocock.
 ---
 
 <what-to-do>

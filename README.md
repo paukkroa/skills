@@ -190,3 +190,12 @@ skill-name/
 ```
 
 `SKILL.md` has YAML frontmatter with `name` and `description`, followed by the skill's instructions. Additional `.md` files in the folder are bundled resources available to the skill at runtime.
+
+## Attribution
+
+The following skills are derived from [Matt Pocock's skills collection](https://github.com/mattpocock/skills):
+
+- **grill-with-docs**
+- **improve-codebase-architecture**
+
+All functional credit for these skills goes to Matt Pocock.
