@@ -1,6 +1,6 @@
 # Claude Code Skills
 
-A collection of custom skills for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that implement a structured **plan → implement → validate** development workflow.
+A collection of custom skills for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that implement a structured **plan → write-tests → implement → validate** development workflow.
 
 ## Skills included
 
@@ -8,7 +8,8 @@ A collection of custom skills for [Claude Code](https://docs.anthropic.com/en/do
 |-------|-------------|
 | **init-project** | One-time project onboarding. Explores the codebase, generates `CONTEXT.md`, sets up beads tracking, and prepares the workflow. |
 | **plan-feature** | Converts business requirements into implementation briefs and beads. Grills you on design decisions. Never writes code. |
-| **implement** | Executes a brief produced by `/plan-feature`. Claims beads, implements layer by layer, runs tests between steps. |
+| **write-tests** | Writes failing tests from a brief BEFORE implementation. Creates interface stubs and a test harness. Prevents confirmation bias. |
+| **implement** | Makes pre-written tests pass (red→green), or writes its own if no test harness exists. Claims beads, implements layer by layer. |
 | **validate** | Reviews completed implementation against the brief, beads, and `CONTEXT.md`. Reports issues — never fixes them directly. |
 | **bead-review** | Standalone bead housekeeping — status review, dependency management, stale/orphan cleanup. |
 | **grill-with-docs** | Stress-tests a plan against your domain model (`CONTEXT.md`). Sharpens terminology inline. |
@@ -58,6 +59,7 @@ Or link individual skills (substitute the target directory as needed):
 ```bash
 ln -sf ~/Documents/skills/init-project     ~/.claude/skills/init-project
 ln -sf ~/Documents/skills/plan-feature     ~/.claude/skills/plan-feature
+ln -sf ~/Documents/skills/write-tests      ~/.claude/skills/write-tests
 ln -sf ~/Documents/skills/implement        ~/.claude/skills/implement
 ln -sf ~/Documents/skills/validate         ~/.claude/skills/validate
 ln -sf ~/Documents/skills/bead-review      ~/.claude/skills/bead-review
@@ -92,7 +94,7 @@ done
 
 ## Example workflow
 
-The core loop is **init → plan → implement → validate**. Here's what that looks like on a real project.
+The core loop is **init → plan → write-tests → implement → validate**. Here's what that looks like on a real project.
 
 ### 1. Initialize the project (one-time)
 
@@ -123,7 +125,21 @@ The skill will:
 
 The brief is a complete spec — a coding agent can follow it without asking questions.
 
-### 3. Implement
+### 3. Write tests (recommended)
+
+```
+/write-tests docs/briefs/email-verification.md
+```
+
+The skill reads the brief and writes tests BEFORE any implementation exists:
+1. Discovers the project's test infrastructure (framework, fixtures, conventions)
+2. Creates interface stubs at the file paths from the brief (function signatures with `NotImplementedError` bodies)
+3. Writes contract tests, integration tests, and acceptance tests — all failing (red)
+4. Appends a `## Test Harness` section to the brief listing all test and stub files
+
+This prevents confirmation bias — tests encode the requirement, not the implementation.
+
+### 4. Implement
 
 ```
 /implement docs/briefs/email-verification.md
@@ -131,13 +147,14 @@ The brief is a complete spec — a coding agent can follow it without asking que
 
 The skill reads the brief and implements it:
 1. Claims each bead before starting work on it
-2. Makes changes layer by layer (data model → business logic → API → UI)
-3. Runs tests after each layer to catch regressions early
-4. Closes beads as each step is verified
+2. If a Test Harness section exists, makes pre-written tests pass (red→green) without modifying test assertions
+3. Makes changes layer by layer (data model → business logic → API → UI)
+4. Runs tests after each layer to catch regressions early
+5. Closes beads as each step is verified
 
 It follows the brief exactly. If something is ambiguous, it stops and asks rather than guessing.
 
-### 4. Validate
+### 5. Validate
 
 ```
 /validate
@@ -152,7 +169,7 @@ The skill acts as an independent reviewer:
 
 It never fixes issues itself — it reports what's wrong and recommends next steps.
 
-### 5. Iterate
+### 6. Iterate
 
 Validation ends with one of three verdicts:
 
@@ -166,7 +183,7 @@ Validation ends with one of three verdicts:
   ```
   /plan-feature <paste the design issues from the validation report>
   ```
-  The planner produces a new brief, then restart from step 3.
+  The planner produces a new brief, then restart from step 3 (`/write-tests`).
 
 Repeat until you get **SHIP**, then commit.
 

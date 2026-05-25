@@ -74,3 +74,4 @@ The brief is a self-contained document that a coding agent (Codex) can execute w
 - **Quote design decisions.** The coding agent wasn't in the grilling session. It needs the WHY, not just the WHAT.
 - **Layer the execution.** Group beads by dependency — what can run in parallel, what's sequential.
 - **No ambiguity.** If there are two valid approaches, the planner already picked one. The brief states which.
+- **Test Harness section is optional.** If `/write-tests` runs before `/implement`, it appends a `## Test Harness` section with pre-written test files and stubs. The implementer uses these as red→green targets. If no Test Harness section exists, the implementer writes its own tests.

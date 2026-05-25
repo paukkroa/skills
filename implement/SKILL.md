@@ -31,6 +31,11 @@ Before writing any code:
 - Check that files referenced in the brief still exist at the expected paths
 - Run the test suite to establish a passing baseline (check `CONTEXT.md` or `bd recall test-command` for the exact command)
 - Note the test count — you must not reduce it
+- Check for a `## Test Harness` section in the brief. If present:
+  - Tests were pre-written by `/write-tests`. Your job is to make them pass (red→green).
+  - Read each test file listed. Understand what the tests expect.
+  - Note the stub files — these define the interface you must implement.
+  - Do NOT modify test assertions. If a test is wrong (tests the wrong behavior, not implementation preference), flag it and stop.
 
 ### 3. Execute bead by bead
 
@@ -43,8 +48,10 @@ Follow the execution order from the brief. For each bead:
 **Implement:** Follow the numbered steps in the brief. Use existing patterns — the brief points to examples in the codebase. Follow them exactly.
 
 **Verify:** Run the project's test suite after each bead.
-- All tests must pass before moving to the next bead
-- If tests fail, fix within 2 attempts. If still failing, stop and report.
+- If the brief has a Test Harness section: the target is making pre-written tests pass. Check which tests for THIS bead have turned green. Do NOT modify test assertions.
+- If no Test Harness section: write your own tests as before.
+- All previously passing tests must continue to pass.
+- If tests fail unexpectedly (not the pre-written red tests turning green), fix within 2 attempts. If still failing, stop and report.
 
 **Close:** `bd close <id>`
 
@@ -58,6 +65,8 @@ When a bead touches multiple architectural layers (models, scorers, routes, conf
 4. Config files (YAML, CacheConfig) → run tests
 
 Do NOT implement all layers at once then test. Verify between each layer.
+
+When a Test Harness exists, each layer should turn more pre-written tests green. Track progress — after each layer, note which pre-written tests now pass.
 
 ### 5. Final verification
 

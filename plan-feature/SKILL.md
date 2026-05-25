@@ -89,16 +89,21 @@ Brief format — see [BRIEF-FORMAT.md](BRIEF-FORMAT.md).
 
 ## Final message: copy-paste handoff
 
-Planning is done. The user picks ONE implementation agent — do not implement yourself.
+Planning is done. The user picks their next step — do not implement yourself.
 
-Provide both handoff formats so the user can paste into their chosen agent:
+Provide all handoff formats so the user can paste into their chosen agent:
 
-**For agents with the `/implement` skill:**
+**Test-first (recommended) — write tests before implementation:**
+```
+/write-tests docs/briefs/<feature-name>.md
+```
+
+**Skip to implementation (tests written by implementer):**
 ```
 /implement docs/briefs/<feature-name>.md
 ```
 
-**For other agents:**
+**For other agents (no skills):**
 ```
 Read the brief at docs/briefs/<feature-name>.md and implement beads <id-1>, <id-2>, ... in that order. Run the test suite after each bead. Do not make design decisions — the brief has all constraints.
 ```
