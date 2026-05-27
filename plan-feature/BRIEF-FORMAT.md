@@ -30,7 +30,7 @@ The brief is a self-contained document that a coding agent (Codex) can execute w
 **Files:** <exact paths>
 
 **What to do:**
-<Numbered steps with specifics — file paths, class names, method signatures, line references>
+<Numbered steps with specifics — file paths, class names, method signatures (name + params + return type), behavioral description of each function. No method bodies, no code blocks, no algorithms. Describe WHAT each function does, not HOW.>
 
 **Design decisions:**
 <Key decisions from grilling, quoted. These are constraints, not suggestions.>
@@ -48,13 +48,22 @@ The brief is a self-contained document that a coding agent (Codex) can execute w
 
 ## Acceptance Criteria
 
-<Behavioral assertions independent of code. These are the "Validation Contract" — what `/validate` checks against.>
+<MANDATORY. Behavioral assertions independent of code. These are the "Validation Contract" — what `/write-tests` turns into failing tests and `/validate` checks against.>
 
-- "When X happens, Y must be true"
-- "Given A, the system must respond with B"
-- "Feature must not regress: <existing behavior>"
+<Every user-visible outcome gets one criterion. Each must be:>
+<- Testable without reading the implementation>
+<- Specific enough to write a pass/fail assertion>
+<- Independent of internal structure (no "function X calls Y")>
 
-<These are end-to-end, user-visible outcomes — not unit test descriptions.>
+- "When a user signs up with a valid email, a verification email is sent within 30 seconds"
+- "When the scorer times out after 950ms, the response uses cached anonymous scores and includes fallback_used: cached_anonymous in the latency report"
+- "When a filmstrip contains custom_card items with a game reference, item_id equals game.gameName lowercased"
+- "Existing block types must produce identical output to before this change"
+
+<NOT acceptable:>
+<- "Verify it works" — not testable>
+<- "Check the response" — no expected value>
+<- "Run make unit-test" — that's a verification step, not a criterion>
 
 ## Constraints
 
@@ -69,9 +78,11 @@ The brief is a self-contained document that a coding agent (Codex) can execute w
 
 ## Rules
 
-- **Be concrete.** File paths, class names, method signatures. Not "update the service" but "add `calculate_discount` method to `OrderProcessor` in `src/orders/processor.py`."
+- **Be concrete.** File paths, class names, method signatures. Not "update the service" but "add `calculate_discount(order: Order, rules: DiscountRules) -> Discount` to `OrderProcessor` in `src/orders/processor.py`."
+- **No code bodies.** Specify function signatures (name, params, return type) and behavioral contracts ("given X input, returns Y"). Never write method implementations, class bodies, or algorithm steps in code blocks. The brief defines the WHAT and the interface — the implementer and test writer decide the HOW. A brief with code bodies pre-commits everyone to one implementation and creates confirmation bias in testing.
 - **Include current state.** If building on prior work, say what exists and what's remaining.
 - **Quote design decisions.** The coding agent wasn't in the grilling session. It needs the WHY, not just the WHAT.
 - **Layer the execution.** Group beads by dependency — what can run in parallel, what's sequential.
 - **No ambiguity.** If there are two valid approaches, the planner already picked one. The brief states which.
+- **Acceptance Criteria are mandatory.** Every brief must have behavioral "when X then Y" assertions. These are what `/write-tests` converts to failing tests and `/validate` checks against. Without them, testing and validation have no contract.
 - **Test Harness section is optional.** If `/write-tests` runs before `/implement`, it appends a `## Test Harness` section with pre-written test files and stubs. The implementer uses these as red→green targets. If no Test Harness section exists, the implementer writes its own tests.

@@ -9,7 +9,7 @@ Convert business requirements into implementation-ready specs. Output is beads +
 
 ## Hard rules
 
-1. **Do NOT write code.** No implementations, no stubs, no prototypes. Only specs and beads.
+1. **Do NOT write code.** No implementations, no stubs, no prototypes, no method bodies. Briefs specify interfaces (function names, parameter types, return types) and behavioral contracts ("given X, return Y") — never HOW the code works internally. A code block in a brief is almost always a mistake.
 2. **Do NOT enter plan mode.** Stay in this skill's workflow.
 3. **Max 2 exploration attempts** per question. If codebase exploration doesn't answer it, ask the user.
 4. **Use beads for ALL task tracking.** No TodoWrite, TaskCreate, or markdown TODOs.
@@ -86,6 +86,8 @@ After beads are created and user approves, generate a **coding agent brief** —
 Write to `docs/briefs/<feature-name>.md` AND show a summary in conversation.
 
 Brief format — see [BRIEF-FORMAT.md](BRIEF-FORMAT.md).
+
+**Acceptance Criteria are mandatory.** Every brief must end with behavioral "when X then Y" assertions that are testable, implementation-independent, and cover every user-visible outcome. These are what `/write-tests` turns into failing tests and what `/validate` checks against. Vague checklists ("verify it works") are not acceptance criteria.
 
 ## Final message: copy-paste handoff
 
