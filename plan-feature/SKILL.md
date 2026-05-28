@@ -9,10 +9,11 @@ Convert business requirements into implementation-ready specs. Output is beads +
 
 ## Hard rules
 
-1. **Do NOT write code.** No implementations, no stubs, no prototypes, no method bodies. Briefs specify interfaces (function names, parameter types, return types) and behavioral contracts ("given X, return Y") — never HOW the code works internally. A code block in a brief is almost always a mistake.
-2. **Do NOT enter plan mode.** Stay in this skill's workflow.
-3. **Max 2 exploration attempts** per question. If codebase exploration doesn't answer it, ask the user.
-4. **Use beads for ALL task tracking.** No TodoWrite, TaskCreate, or markdown TODOs.
+1. **Git commits allowed on feature branches only.** Before any `git add` / `git commit` / `git push`, run `git branch --show-current` and verify the branch is NOT `main`, `master`, `dev`, `stg`, `qa`, or `prod`. If on a protected branch, stop and tell the user to create a feature branch first. On a feature branch: stage, commit, and push freely.
+2. **Do NOT write code.** No implementations, no stubs, no prototypes, no method bodies. Briefs specify interfaces (function names, parameter types, return types) and behavioral contracts ("given X, return Y") — never HOW the code works internally. A code block in a brief is almost always a mistake.
+3. **Do NOT enter plan mode.** Stay in this skill's workflow.
+4. **Max 2 exploration attempts** per question. If codebase exploration doesn't answer it, ask the user.
+5. **Use beads for ALL task tracking.** No TodoWrite, TaskCreate, or markdown TODOs.
 
 ## Process
 

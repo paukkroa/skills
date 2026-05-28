@@ -10,7 +10,7 @@ Execute an implementation brief. You are the coding agent — read the brief, fo
 ## Hard rules
 
 1. **Follow the brief exactly.** Design decisions in the brief are constraints, not suggestions. They were resolved during planning — do not re-litigate them.
-2. **Do NOT run git add or git commit.** The user handles all git operations.
+2. **Git commits allowed on feature branches only.** Before any `git add` / `git commit` / `git push`, run `git branch --show-current` and verify the branch is NOT `main`, `master`, `dev`, `stg`, `qa`, or `prod`. If on a protected branch, stop and tell the user to create a feature branch first. On a feature branch: stage, commit, and push freely.
 3. **Do NOT make design decisions.** If the brief is ambiguous, stop and describe the ambiguity — do not guess.
 4. **Max 2 attempts** at any fix. If something isn't working after 2 tries, describe the problem and stop.
 5. **Use beads for tracking.** `bd update <id> --claim` when starting a bead, `bd close <id>` when done.

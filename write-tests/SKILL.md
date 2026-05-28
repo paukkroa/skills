@@ -16,7 +16,7 @@ Read a brief produced by `/plan-feature` and write tests BEFORE any implementati
 5. **Do NOT modify test assertions in existing tests.** Only add new test functions.
 6. **Max 2 exploration attempts** per question. If codebase exploration doesn't answer it, ask the user.
 7. **Use beads for context only.** Read beads with `bd show <id>` but do NOT claim or close them — they stay open for the implementer.
-8. **Do NOT run git add or git commit.** The user handles all git operations.
+8. **Git commits allowed on feature branches only.** Before any `git add` / `git commit` / `git push`, run `git branch --show-current` and verify the branch is NOT `main`, `master`, `dev`, `stg`, `qa`, or `prod`. If on a protected branch, stop and tell the user to create a feature branch first. On a feature branch: stage, commit, and push freely.
 9. **Follow existing test patterns exactly.** Use the project's test framework, directory structure, naming conventions, and fixture patterns. Explore before writing.
 
 ## Process

@@ -9,15 +9,16 @@ Review completed implementation against the original spec and beads. Focus is **
 
 ## Hard rules
 
-1. **Do NOT fix bugs yourself.** No code edits, no config changes, no YAML tweaks, no "temporary" workarounds. Report what's wrong and how to fix it. The user decides whether to fix manually or send back to the coding agent. Even obvious one-line fixes go through the process — create a bead, describe the fix direction, recommend SHIP, FIX, or SEND BACK.
+1. **Git commits allowed on feature branches only.** Before any `git add` / `git commit` / `git push`, run `git branch --show-current` and verify the branch is NOT `main`, `master`, `dev`, `stg`, `qa`, or `prod`. If on a protected branch, stop and tell the user to create a feature branch first. On a feature branch: stage, commit, and push freely.
+2. **Do NOT fix bugs yourself.** No code edits, no config changes, no YAML tweaks, no "temporary" workarounds. Report what's wrong and how to fix it. The user decides whether to fix manually or send back to the coding agent. Even obvious one-line fixes go through the process — create a bead, describe the fix direction, recommend SHIP, FIX, or SEND BACK.
    - **FIX** = implementation bugs, minor gaps. The design is sound, the code just needs fixes. Auto-generate a fix brief (step 9).
    - **SEND BACK** = design is wrong, scope is wrong, approach is wrong. The brief itself was flawed. Explain what's wrong with the design so the user can re-plan with `/plan-feature` (step 10).
-2. **Max 2 debug attempts** when investigating an issue. If root cause isn't clear, describe what you see and ask the user.
-3. **Use beads for tracking.** Create new beads for gaps found. Close beads that are verified complete.
-4. **Functional focus.** Does the feature work as specified? Does anything break downstream? Not: is the code pretty?
-5. **Fresh context.** Work from the brief, beads, and git diff only. Do not rely on the implementation conversation — you are a separate verifier, not the same agent that wrote the code.
-6. **Runtime evidence required.** At least the happy path MUST be verified by starting the server and making a real request. "Math verified" or "code looks correct" is not sufficient for a SHIP recommendation. If you cannot start the server, say so explicitly — never silently substitute code reading for runtime testing.
-7. **Trace the full data path.** Before verifying individual pieces, map the data flow from source (config/input) through every intermediary function to the final consumer (API response/side effect). Verify each handoff — a correct function that never receives its input is a broken feature.
+3. **Max 2 debug attempts** when investigating an issue. If root cause isn't clear, describe what you see and ask the user.
+4. **Use beads for tracking.** Create new beads for gaps found. Close beads that are verified complete.
+5. **Functional focus.** Does the feature work as specified? Does anything break downstream? Not: is the code pretty?
+6. **Fresh context.** Work from the brief, beads, and git diff only. Do not rely on the implementation conversation — you are a separate verifier, not the same agent that wrote the code.
+7. **Runtime evidence required.** At least the happy path MUST be verified by starting the server and making a real request. "Math verified" or "code looks correct" is not sufficient for a SHIP recommendation. If you cannot start the server, say so explicitly — never silently substitute code reading for runtime testing.
+8. **Trace the full data path.** Before verifying individual pieces, map the data flow from source (config/input) through every intermediary function to the final consumer (API response/side effect). Verify each handoff — a correct function that never receives its input is a broken feature.
 
 ## Process
 
