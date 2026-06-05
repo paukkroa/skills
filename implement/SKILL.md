@@ -1,6 +1,8 @@
 ---
 name: implement
 description: Execute an implementation brief produced by the /plan-feature skill. Reads the brief, claims beads, implements changes layer by layer with test verification between each step, and closes beads when done. Use when you have a brief file (docs/briefs/*.md) and need to implement the specified changes.
+model: sonnet
+allowed-tools: Bash(bd *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
 ---
 
 # Implement

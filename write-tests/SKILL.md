@@ -1,6 +1,8 @@
 ---
 name: write-tests
 description: Write failing tests from a brief BEFORE implementation exists. Creates interface stubs and tests that encode the behavioral contract. The implementer then makes these tests pass (red→green). Use after /plan-feature and before /implement to prevent confirmation bias in testing.
+model: sonnet
+allowed-tools: Bash(bd *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
 ---
 
 # Write Tests

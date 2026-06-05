@@ -1,6 +1,9 @@
 ---
 name: validate
 description: Validate a completed implementation against business requirements, beads, and CONTEXT.md. Runs tests, checks end-to-end behavior with the local server, reviews architectural alignment, and identifies gaps. Use when a coding agent (Codex) has finished work and you want to verify it before committing.
+model: sonnet
+effort: high
+allowed-tools: Bash(bd *) Bash(git diff *) Bash(git log *) Bash(git branch *) Bash(git status *)
 ---
 
 # Validate

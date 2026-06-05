@@ -1,6 +1,8 @@
 ---
 name: plan-feature
 description: Convert business requirements into implementation specs and beads for a coding agent. Uses grilling interview style to resolve design decisions, explores codebase for constraints, and outputs structured briefs. Use when starting new features, converting specs/PRDs into tasks, or preparing work for Codex/coding agents. NEVER writes code.
+effort: high
+allowed-tools: Bash(bd *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
 ---
 
 # Plan

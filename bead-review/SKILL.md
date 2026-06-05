@@ -1,6 +1,7 @@
 ---
 name: bead-review
 description: Review, update, and manage beads without planning or implementing. Standalone bead housekeeping — status review, dependency management, gap analysis, stale/orphan cleanup, and spec-vs-codebase comparison. Use when user wants to check bead status, update beads, manage dependencies, find stale or orphan beads, or do bead housekeeping. NEVER plans features or writes code.
+allowed-tools: Bash(bd *)
 ---
 
 # Bead Review
