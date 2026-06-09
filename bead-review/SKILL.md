@@ -12,9 +12,8 @@ Standalone bead management. Review status, update beads, manage dependencies, fi
 
 1. **Do NOT plan features.** If the user needs a new feature planned, hand off to `/plan-feature`.
 2. **Do NOT write code.** If beads need implementation, hand off to `/implement`.
-3. **Do NOT create briefs.** Briefs are `/plan-feature`'s output.
-4. **Max 2 exploration attempts** per question. If codebase exploration doesn't answer it, ask the user.
-5. **All bead operations use `bd` CLI.** No TodoWrite, TaskCreate, or markdown TODOs.
+3. **Max 2 exploration attempts** per question. If codebase exploration doesn't answer it, ask the user.
+4. **All bead operations use `bd` CLI.** No TodoWrite, TaskCreate, or markdown TODOs.
 
 ## Process
 
@@ -110,7 +109,7 @@ Present a structured report:
 - <actionable next steps>
 
 ### Handoffs
-- Ready for `/implement`: <bead-ids>
+- Ready for `/implement`: <bead-ids> — run `/implement` to start
 - Needs `/plan-feature` first: <bead-ids>
 - Needs `/diagnose` first: <bead-ids with bugs>
 ```

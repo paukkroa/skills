@@ -101,7 +101,6 @@ Check that the plan → implement → validate pipeline is ready:
 
 - [ ] `CONTEXT.md` exists and is current
 - [ ] Beads tracking is healthy (`bd doctor`)
-- [ ] `.claude/briefs/` directory exists
 - [ ] Build command works (identify and record it)
 - [ ] Test command works (identify, record, note current pass count)
 - [ ] Local run command works (identify and record it)
@@ -141,7 +140,6 @@ Record build/test/run commands for future reference.
 ### Workflow Ready
 - [x/] CONTEXT.md
 - [x/] Beads
-- [x/] Briefs directory
 - [x/] Test suite
 - [x/] Local run
 
@@ -159,7 +157,7 @@ Ask the user about their setup preferences:
 - Do you have a shared skills repo? (e.g. `~/Documents/skills/`)
   - Yes → symlink `plan`, `implement`, `validate`, `init-project`, `grill-with-docs`, `improve-codebase-architecture` into `.claude/skills/`
   - No → copy skills into `.claude/skills/` directly
-- Should `.claude/skills/` and `.claude/briefs/` be git-ignored? (Yes if symlinked, maybe not if copied)
+- Should `.claude/skills/` be git-ignored? (Yes if symlinked, maybe not if copied)
 
 **Beads persistence:**
 - Local only (default `bd init`) or remote server?
@@ -175,7 +173,6 @@ Ask the user about their setup preferences:
 Present a checklist and let the user confirm before writing:
 ```
 [ ] .claude/skills/     (symlinked from shared repo)
-[ ] .claude/briefs/     (ephemeral working files)
 [ ] .dolt/              (beads database)
 [ ] .beads-credential-key
 [ ] *.db

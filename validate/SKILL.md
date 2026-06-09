@@ -8,18 +8,18 @@ allowed-tools: Bash(bd *) Bash(git diff *) Bash(git log *) Bash(git branch *) Ba
 
 # Validate
 
-Review completed implementation against the original spec and beads. Focus is **functional correctness and end-to-end behavior**, not code style or test coverage metrics.
+Review completed implementation against the original bead specs. Focus is **functional correctness and end-to-end behavior**, not code style or test coverage metrics.
 
 ## Hard rules
 
 1. **Git commits allowed on feature branches only.** Before any `git add` / `git commit` / `git push`, run `git branch --show-current` and verify the branch is NOT `main`, `master`, `dev`, `stg`, `qa`, or `prod`. If on a protected branch, stop and tell the user to create a feature branch first. On a feature branch: stage, commit, and push freely.
 2. **Do NOT fix bugs yourself.** No code edits, no config changes, no YAML tweaks, no "temporary" workarounds. Report what's wrong and how to fix it. The user decides whether to fix manually or send back to the coding agent. Even obvious one-line fixes go through the process — create a bead, describe the fix direction, recommend SHIP, FIX, or SEND BACK.
-   - **FIX** = implementation bugs, minor gaps. The design is sound, the code just needs fixes. Auto-generate a fix brief (step 9).
-   - **SEND BACK** = design is wrong, scope is wrong, approach is wrong. The brief itself was flawed. Explain what's wrong with the design so the user can re-plan with `/plan-feature` (step 10).
+   - **FIX** = implementation bugs, minor gaps. The design is sound, the code just needs fixes. Auto-generate fix beads (step 9).
+   - **SEND BACK** = design is wrong, scope is wrong, approach is wrong. The bead specs themselves were flawed. Explain what's wrong with the design so the user can re-plan with `/plan-feature` (step 10).
 3. **Max 2 debug attempts** when investigating an issue. If root cause isn't clear, describe what you see and ask the user.
 4. **Use beads for tracking.** Create new beads for gaps found. Close beads that are verified complete.
 5. **Functional focus.** Does the feature work as specified? Does anything break downstream? Not: is the code pretty?
-6. **Fresh context.** Work from the brief, beads, and git diff only. Do not rely on the implementation conversation — you are a separate verifier, not the same agent that wrote the code.
+6. **Fresh context.** Work from the beads, CONTEXT.md, and git diff only. Do not rely on the implementation conversation — you are a separate verifier, not the same agent that wrote the code.
 7. **Runtime evidence required.** At least the happy path MUST be verified by starting the server and making a real request. "Math verified" or "code looks correct" is not sufficient for a SHIP recommendation. If you cannot start the server, say so explicitly — never silently substitute code reading for runtime testing.
 8. **Trace the full data path.** Before verifying individual pieces, map the data flow from source (config/input) through every intermediary function to the final consumer (API response/side effect). Verify each handoff — a correct function that never receives its input is a broken feature.
 
@@ -27,9 +27,8 @@ Review completed implementation against the original spec and beads. Focus is **
 
 ### 1. Gather context
 
-Read the brief file if it exists (`docs/briefs/<feature-name>.md`).
-Run `bd list --status=in_progress` and `bd list --status=open` to see what was worked on.
-Run `bd show <id>` for each relevant bead to get the original spec.
+Run `bd list` to see all beads and their status.
+Run `bd show <id>` for each relevant bead — both the feature bead (goal + acceptance criteria) and task beads (implementation specs).
 
 Read `CONTEXT.md` for domain vocabulary.
 
@@ -59,14 +58,14 @@ If tests pass, note the count and move on.
 Before testing individual scenarios, map the complete data flow for the new feature. This catches wiring bugs that unit tests miss (tests often construct inputs directly, bypassing real loading/routing).
 
 1. **Identify the path**: From the source of truth (config file, API input, database) through every function/module to the final consumer (API response, side effect, UI).
-2. **Verify each handoff**: At every boundary where data passes from one function/module to another, confirm the receiving function actually gets the data. Read the intermediary code — don't assume "it's wired up" because the brief says so.
+2. **Verify each handoff**: At every boundary where data passes from one function/module to another, confirm the receiving function actually gets the data. Read the intermediary code — don't assume "it's wired up" because the bead says so.
 3. **Question test fixtures**: If unit tests construct their own input data (hand-built dicts, mock configs), flag this. Tests that bypass real loading paths give false confidence. Note which integration paths are NOT covered by tests.
 
 Report the data path in the verification table with a dedicated row, e.g.:
 
 | Scenario | Expected | Actual | Status |
 |---|---|---|---|
-| Data flows from YAML config → get_config() → route → compute() | field present at each step | get_config() drops the key | FAIL |
+| Data flows from YAML config -> get_config() -> route -> compute() | field present at each step | get_config() drops the key | FAIL |
 
 ### 5. Functional verification
 
@@ -78,7 +77,7 @@ This is the core of validation — do NOT skip it. Unit tests verify code correc
 - One happy-path request with expected inputs — verify the response contains the new data
 - One edge-case request (missing config, boundary values) — verify graceful handling
 
-**Check against Acceptance Criteria:** If the brief has an Acceptance Criteria section, verify each assertion. These are the primary pass/fail criteria.
+**Check against Acceptance Criteria:** Read the feature bead's Acceptance Criteria section and verify each assertion. These are the primary pass/fail criteria.
 
 **Inspect logs.** After making requests, check server logs for:
 - Expected log entries from the new code path
@@ -103,7 +102,7 @@ Report findings as a table. At least one row must come from an actual HTTP respo
 | Scenario | Expected | Actual | Status |
 |---|---|---|---|
 | Happy path (live request) | field = 5.0 | HTTP response shows field = 5.0 | PASS |
-| Data path integrity | config → route → compute | verified at each handoff | PASS |
+| Data path integrity | config -> route -> compute | verified at each handoff | PASS |
 
 ### 6. Architectural review
 
@@ -151,7 +150,7 @@ Present a structured report:
 SHIP / FIX / SEND BACK
 
 - **SHIP**: Feature works as specified. Commit.
-- **FIX**: Implementation bugs or minor gaps. Design is sound. Fix brief auto-generated at `docs/briefs/<feature>-fix.md` — hand to `/implement`.
+- **FIX**: Implementation bugs or minor gaps. Design is sound. Fix beads auto-generated — hand to `/implement`.
 - **SEND BACK**: Design, scope, or approach is fundamentally wrong. Re-plan needed. Hand the Design Issues section below to `/plan-feature`.
 
 ### Design Issues (SEND BACK only)
@@ -171,32 +170,31 @@ Close beads that are fully verified. Update partially-complete beads with notes 
 
 For larger bead hygiene issues (many stale beads, dependency tangles), hand off to `/bead-review`.
 
-### 9. Auto-generate fix brief (if FIX)
+### 9. Auto-generate fix beads (if FIX)
 
-When the recommendation is **FIX**, automatically generate a fix brief:
+When the recommendation is **FIX**, automatically generate fix beads:
 
-- Create/update beads for each issue found (step 8)
-- Read the current codebase state (files changed, current line numbers)
-- Write a new brief to `docs/briefs/<feature-name>-fix.md` following the same format as `/implement` ([BRIEF-FORMAT](../plan-feature/BRIEF-FORMAT.md))
-- The fix brief includes:
-  - Only the failing beads — not the whole feature
+- Create beads for each issue found (step 8) with implementation-ready descriptions following the [BEAD-SPEC-FORMAT](../plan-feature/BEAD-SPEC-FORMAT.md)
+- Each fix bead includes:
+  - Only the failing aspect — not the whole feature
   - What was attempted and why it's wrong (from the validation report)
   - Exact file paths and line numbers in the CURRENT state (post-implementation, not pre)
   - Test commands to verify each fix
-- Show the brief path in conversation so the user can hand it to `/implement` immediately
+- Set up dependencies between fix beads if needed
+- Show a summary in conversation so the user can hand off to `/implement`
 
-This closes the loop: `/validate` → fix brief → `/implement` → `/validate` again.
+This closes the loop: `/validate` -> fix beads -> `/implement` -> `/validate` again.
 
 ### 10. Explain design issues (if SEND BACK)
 
-When the recommendation is **SEND BACK**, the problem is at the design level — re-implementing the same brief won't fix it. Do NOT generate a fix brief. Instead:
+When the recommendation is **SEND BACK**, the problem is at the design level — re-implementing won't fix it. Do NOT generate fix beads. Instead:
 
 - Explain what's wrong with the current design or approach
 - Explain why more implementation won't solve it (wrong abstraction, missing requirement, incorrect assumption, scope mismatch)
-- Reference the specific brief sections or bead specs that need rethinking
+- Reference the specific bead specs that need rethinking
 - Suggest what questions `/plan-feature` should resolve in the next round
 
-The user takes this back to `/plan-feature` for re-scoping. The planner produces a new brief, then the cycle restarts.
+The user takes this back to `/plan-feature` for re-scoping. The planner produces new beads, then the cycle restarts.
 
 ### 11. Update CONTEXT.md
 

@@ -1,13 +1,13 @@
 ---
 name: write-tests
-description: Write failing tests from a brief BEFORE implementation exists. Creates interface stubs and tests that encode the behavioral contract. The implementer then makes these tests pass (red→green). Use after /plan-feature and before /implement to prevent confirmation bias in testing.
+description: Write failing tests from beads BEFORE implementation exists. Creates interface stubs and tests that encode the behavioral contract. The implementer then makes these tests pass (red->green). Use after /plan-feature and before /implement to prevent confirmation bias in testing.
 model: sonnet
 allowed-tools: Bash(bd *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
 ---
 
 # Write Tests
 
-Read a brief produced by `/plan-feature` and write tests BEFORE any implementation exists. Output is failing tests (red) plus minimal interface stubs. The implementer makes them green.
+Read beads produced by `/plan-feature` and write tests BEFORE any implementation exists. Output is failing tests (red) plus minimal interface stubs. The implementer makes them green.
 
 ## Hard rules
 
@@ -25,11 +25,13 @@ Read a brief produced by `/plan-feature` and write tests BEFORE any implementati
 
 ### 1. Load context
 
-Read the brief file passed as argument. If no file is passed, check `docs/briefs/` for the most recent brief.
+Run `bd list --status=open` to see all beads. Identify the feature bead (`--type feature`) and all task beads.
+
+Read the feature bead with `bd show <id>` to get the goal, context files, and acceptance criteria.
+
+Read each task bead with `bd show <id>` to get the implementation spec.
 
 Read `CONTEXT.md` for domain vocabulary and architecture context.
-
-Run `bd show <id>` for each bead in the brief to confirm they exist and are open.
 
 ### 2. Discover test infrastructure
 
@@ -45,12 +47,12 @@ If the project has no test infrastructure at all, ask the user which framework t
 
 Record the current test count. You must not break existing tests.
 
-### 3. Analyze the brief for test targets
+### 3. Analyze beads for test targets
 
-For each bead in the brief, extract:
+For each task bead, extract from its description:
 
 1. **The public interface** — function signatures, class methods, API endpoints, config shapes. From the "What to do" section.
-2. **The behavioral contract** — what the interface must do. From "Test expectations" and "Acceptance Criteria."
+2. **The behavioral contract** — what the interface must do. From "Test expectations" and the feature bead's "Acceptance Criteria."
 3. **The boundary conditions** — edge cases, error handling, fallback behavior. From design decisions recorded during grilling.
 
 Classify each test target by level. See [TEST-STRATEGY.md](TEST-STRATEGY.md) for detailed guidance.
@@ -58,8 +60,8 @@ Classify each test target by level. See [TEST-STRATEGY.md](TEST-STRATEGY.md) for
 | Level | What it tests | When to use |
 |---|---|---|
 | **Contract test** | A module's public interface with real inputs and expected outputs | Every bead that introduces or modifies a public interface. Primary level. |
-| **Integration test** | Multiple modules wired together, exercising a real data path | Cross-bead interactions, data flow from input to output. At least one per brief. |
-| **Acceptance test** | End-to-end behavior matching an Acceptance Criteria line | Each line in the brief's Acceptance Criteria section. |
+| **Integration test** | Multiple modules wired together, exercising a real data path | Cross-bead interactions, data flow from input to output. At least one per feature. |
+| **Acceptance test** | End-to-end behavior matching an Acceptance Criteria line | Each line in the feature bead's Acceptance Criteria section. |
 
 Do NOT write tests for internal/private functions. Internal structure is the implementer's decision.
 
@@ -67,11 +69,11 @@ Do NOT write tests for internal/private functions. Internal structure is the imp
 
 For each module that tests need to import, create a stub file:
 
-- Place stubs at the EXACT file paths specified in the brief's "Files" sections.
-- Export the EXACT names the brief specifies (function names, class names, constants).
-- Include type signatures / parameter lists that match the brief's instructions.
+- Place stubs at the EXACT file paths specified in the bead's "Files" sections.
+- Export the EXACT names the bead specifies (function names, class names, constants).
+- Include type signatures / parameter lists that match the bead's instructions.
 - Bodies: `raise NotImplementedError("stub")` (Python), `throw new Error("not implemented")` (JS/TS), equivalent in other languages.
-- For classes: stub all public methods mentioned in the brief. No private methods.
+- For classes: stub all public methods mentioned in the bead. No private methods.
 - For modules being MODIFIED (not created): do NOT overwrite existing code. Read the existing file first, then add only the new functions/methods with stub bodies after existing code.
 - `__init__.py` files: only re-exports, never definitions (per project convention).
 
@@ -83,7 +85,7 @@ For each module that tests need to import, create a stub file:
 
 ### 5. Write tests bead by bead
 
-Follow the execution order from the brief. For each bead:
+Follow the execution order from `bd graph`. For each task bead:
 
 **Write contract tests** for the bead's public interface:
 - Import from the stub files.
@@ -98,24 +100,24 @@ Follow the execution order from the brief. For each bead:
 
 **For API endpoints that don't exist yet:**
 - Write tests using the project's HTTP test client (e.g., FastAPI's TestClient, supertest, httptest).
-- Import the app/router from where the brief says it will be wired.
+- Import the app/router from where the bead says it will be wired.
 - Test request/response shapes, status codes, headers — the HTTP contract.
 - The route handler stub returns 501 Not Implemented.
 
 **For modifications to existing modules:**
 - Read existing tests first. Understand what's already covered.
 - Add new test functions for new behavior. Do NOT modify existing test assertions.
-- If existing tests will break due to interface changes, note them in the Test Harness section but do NOT change them — the implementer handles test migration.
+- If existing tests will break due to interface changes, note them in the test harness metadata but do NOT change them — the implementer handles test migration.
 
 **Verify red:** Run the test suite. Every new test MUST fail. If any new test passes:
-- The stub has logic it shouldn't → fix the stub
-- The test isn't testing new behavior → rewrite the test
+- The stub has logic it shouldn't -> fix the stub
+- The test isn't testing new behavior -> rewrite the test
 
 Record the failure output — it's the implementer's target.
 
 ### 6. Write acceptance tests
 
-After all bead-level tests, write tests for each line in the brief's "Acceptance Criteria" section:
+After all bead-level tests, write tests for each line in the feature bead's "Acceptance Criteria" section:
 
 - End-to-end tests that exercise the full feature path.
 - May overlap with integration tests — that's fine. Acceptance tests are the validation contract.
@@ -123,35 +125,19 @@ After all bead-level tests, write tests for each line in the brief's "Acceptance
 
 Verify they all fail (red).
 
-### 7. Update the brief
+### 7. Store test harness info
 
-Append a `## Test Harness` section to the brief file:
+Store test harness metadata using `bd remember` so the implementer can discover it:
 
-```md
-## Test Harness
+```bash
+bd remember test-harness-stubs "<comma-separated stub file paths>"
+bd remember test-harness-tests "<comma-separated test file paths>"
+bd remember test-harness-baseline "<N> tests passing"
+```
 
-Written by `/write-tests` — these tests encode the behavioral contract.
-The implementer makes them pass (red→green) without modifying test assertions.
-
-### Stub files created
-- `<path>` — <what it stubs>
-
-### Test files created
-- `<path>` — contract tests for <bead-id>
-- `<path>` — integration tests
-- `<path>` — acceptance tests
-
-### Current test results
-- Existing tests: X passing
-- New tests: Y failing (expected — all red)
-- Failure modes: <summary of NotImplementedError / not-implemented patterns>
-
-### Rules for the implementer
-1. Make all new tests pass without modifying test files.
-2. If a test is wrong (tests the wrong behavior), flag it — do not silently change it.
-3. Replace stub bodies with real implementations.
-4. Existing tests must continue to pass.
-5. If existing tests break due to interface changes, update them to match the new interface while preserving their behavioral assertions.
+Also store notes about tests that will break:
+```bash
+bd remember test-harness-breaking "<test files the implementer needs to update>"
 ```
 
 ### 8. Final verification
@@ -167,12 +153,12 @@ Provide both handoff formats:
 
 **For agents with the `/implement` skill:**
 ```
-/implement docs/briefs/<feature-name>.md
+/implement
 ```
 
 **For other agents:**
 ```
-Read the brief at docs/briefs/<feature-name>.md. A test harness already exists — see the "Test Harness" section. Your job is to make all failing tests pass (red→green) without modifying test assertions. Implement beads <id-1>, <id-2>, ... in that order. Run the test suite after each bead. Do not make design decisions — the brief has all constraints.
+Run `bd list --status=open` to see all work. A test harness already exists — run `bd recall test-harness-stubs` and `bd recall test-harness-tests` for file paths. Your job is to make all failing tests pass (red->green) without modifying test assertions. Implement beads in dependency order (check `bd graph`). Run the test suite after each bead. Do not make design decisions — the bead specs have all constraints.
 ```
 
 ## Constraints
@@ -183,11 +169,11 @@ Read the brief at docs/briefs/<feature-name>.md. A test harness already exists �
 - Do NOT write tests that assert on implementation details (internal state, private method calls, execution order of internals).
 - Prefer real objects over mocks. Use the dependency classification from [DEEPENING.md](../improve-codebase-architecture/DEEPENING.md): in-process (no mock), local-substitutable (use the stand-in), remote-owned (in-memory adapter), true-external (mock).
 - If a bead's "Test expectations" are too vague to write a concrete test, stop and ask the user. Do not invent requirements.
-- When the brief references a module from another bead in the same brief, use its stub. When it references an existing module NOT in the brief, import the real module.
+- When a bead references a module from another bead in the same feature, use its stub. When it references an existing module NOT in the feature, import the real module.
 
 ## When stuck
 
-If you hit a problem the brief doesn't cover:
+If you hit a problem the bead specs don't cover:
 
 1. Describe what you tried (max 2 attempts)
 2. Show the error or unexpected behavior

@@ -1,27 +1,31 @@
 ---
 name: implement
-description: Execute an implementation brief produced by the /plan-feature skill. Reads the brief, claims beads, implements changes layer by layer with test verification between each step, and closes beads when done. Use when you have a brief file (docs/briefs/*.md) and need to implement the specified changes.
+description: Execute implementation from beads produced by /plan-feature. Reads bead specs, claims beads, implements changes layer by layer with test verification between each step, and closes beads when done.
 model: sonnet
 allowed-tools: Bash(bd *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
 ---
 
 # Implement
 
-Execute an implementation brief. You are the coding agent — read the brief, follow it precisely, and implement the changes.
+Execute an implementation from beads. You are the coding agent — read the bead specs, follow them precisely, and implement the changes.
 
 ## Hard rules
 
-1. **Follow the brief exactly.** Design decisions in the brief are constraints, not suggestions. They were resolved during planning — do not re-litigate them.
+1. **Follow the bead specs exactly.** Design decisions in bead descriptions are constraints, not suggestions. They were resolved during planning — do not re-litigate them.
 2. **Git commits allowed on feature branches only.** Before any `git add` / `git commit` / `git push`, run `git branch --show-current` and verify the branch is NOT `main`, `master`, `dev`, `stg`, `qa`, or `prod`. If on a protected branch, stop and tell the user to create a feature branch first. On a feature branch: stage, commit, and push freely.
-3. **Do NOT make design decisions.** If the brief is ambiguous, stop and describe the ambiguity — do not guess.
+3. **Do NOT make design decisions.** If a bead spec is ambiguous, stop and describe the ambiguity — do not guess.
 4. **Max 2 attempts** at any fix. If something isn't working after 2 tries, describe the problem and stop.
 5. **Use beads for tracking.** `bd update <id> --claim` when starting a bead, `bd close <id>` when done.
 
 ## Process
 
-### 1. Load the brief
+### 1. Load beads
 
-Read the brief file passed as argument. If no file is passed, check `docs/briefs/` for the most recent brief.
+Run `bd list --status=open` and `bd ready` to see available work.
+
+Find the feature bead (`--type feature`) — read it with `bd show <id>` for the goal, context files, and acceptance criteria.
+
+Read `bd show <id>` for each task bead to get the implementation spec.
 
 Read `CONTEXT.md` for domain vocabulary and architecture context.
 
@@ -29,29 +33,30 @@ Read `CONTEXT.md` for domain vocabulary and architecture context.
 
 Before writing any code:
 
-- Run `bd show <id>` for each bead in the brief — verify they exist and are open
-- Check that files referenced in the brief still exist at the expected paths
+- Run `bd show <id>` for each task bead — verify they exist and are open
+- Check that files referenced in bead descriptions still exist at the expected paths
 - Run the test suite to establish a passing baseline (check `CONTEXT.md` or `bd recall test-command` for the exact command)
 - Note the test count — you must not reduce it
-- Check for a `## Test Harness` section in the brief. If present:
-  - Tests were pre-written by `/write-tests`. Your job is to make them pass (red→green).
+- Check for a test harness: run `bd recall test-harness-stubs`. If it returns results:
+  - Tests were pre-written by `/write-tests`. Your job is to make them pass (red->green).
+  - Run `bd recall test-harness-tests` to get the test file paths.
   - Read each test file listed. Understand what the tests expect.
   - Note the stub files — these define the interface you must implement.
   - Do NOT modify test assertions. If a test is wrong (tests the wrong behavior, not implementation preference), flag it and stop.
 
 ### 3. Execute bead by bead
 
-Follow the execution order from the brief. For each bead:
+Follow the execution order from `bd graph`. For each task bead:
 
 **Claim:** `bd update <id> --claim`
 
-**Read:** Re-read the target files. The brief has line numbers but they may have shifted if earlier beads modified the same files.
+**Read:** Run `bd show <id>` to get the full spec. Re-read the target files. The bead has line numbers but they may have shifted if earlier beads modified the same files.
 
-**Implement:** Follow the numbered steps in the brief. Use existing patterns — the brief points to examples in the codebase. Follow them exactly.
+**Implement:** Follow the numbered steps in the bead's "What to do" section. Use existing patterns — the bead points to examples in the codebase. Follow them exactly.
 
 **Verify:** Run the project's test suite after each bead.
-- If the brief has a Test Harness section: the target is making pre-written tests pass. Check which tests for THIS bead have turned green. Do NOT modify test assertions.
-- If no Test Harness section: write your own tests as before.
+- If a test harness exists: the target is making pre-written tests pass. Check which tests for THIS bead have turned green. Do NOT modify test assertions.
+- If no test harness exists: write your own tests as before.
 - All previously passing tests must continue to pass.
 - If tests fail unexpectedly (not the pre-written red tests turning green), fix within 2 attempts. If still failing, stop and report.
 
@@ -61,14 +66,14 @@ Follow the execution order from the brief. For each bead:
 
 When a bead touches multiple architectural layers (models, scorers, routes, config, tests):
 
-1. Domain models / ABCs first → run tests
-2. Implementations (scorers, adapters) → run tests
-3. Wiring (client config, route handler) → run tests
-4. Config files (YAML, CacheConfig) → run tests
+1. Domain models / ABCs first -> run tests
+2. Implementations (scorers, adapters) -> run tests
+3. Wiring (client config, route handler) -> run tests
+4. Config files (YAML, CacheConfig) -> run tests
 
 Do NOT implement all layers at once then test. Verify between each layer.
 
-When a Test Harness exists, each layer should turn more pre-written tests green. Track progress — after each layer, note which pre-written tests now pass.
+When a test harness exists, each layer should turn more pre-written tests green. Track progress — after each layer, note which pre-written tests now pass.
 
 ### 5. Final verification
 
@@ -89,11 +94,11 @@ These apply to every implementation:
 - No comments unless the WHY is non-obvious
 - Follow existing code patterns exactly — check similar implementations before creating new ones
 - Do not over-engineer. Prefer the simplest approach that works.
-- Do not remove hardcoded values or env vars without the brief explicitly saying to
+- Do not remove hardcoded values or env vars without the bead spec explicitly saying to
 
 ## When stuck
 
-If you hit a problem the brief doesn't cover:
+If you hit a problem the bead spec doesn't cover:
 
 1. Describe what you tried (max 2 attempts)
 2. Show the error or unexpected behavior

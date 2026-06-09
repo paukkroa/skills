@@ -7,10 +7,10 @@ A collection of custom skills for [Claude Code](https://docs.anthropic.com/en/do
 | Skill | What it does |
 |-------|-------------|
 | **init-project** | One-time project onboarding. Explores the codebase, generates `CONTEXT.md`, sets up beads tracking, and prepares the workflow. |
-| **plan-feature** | Converts business requirements into implementation briefs and beads. Grills you on design decisions. Never writes code. |
-| **write-tests** | Writes failing tests from a brief BEFORE implementation. Creates interface stubs and a test harness. Prevents confirmation bias. |
+| **plan-feature** | Converts business requirements into implementation-ready beads. Grills you on design decisions. Never writes code. |
+| **write-tests** | Writes failing tests from beads BEFORE implementation. Creates interface stubs and a test harness. Prevents confirmation bias. |
 | **implement** | Makes pre-written tests pass (red→green), or writes its own if no test harness exists. Claims beads, implements layer by layer. |
-| **validate** | Reviews completed implementation against the brief, beads, and `CONTEXT.md`. Reports issues — never fixes them directly. |
+| **validate** | Reviews completed implementation against beads and `CONTEXT.md`. Reports issues — never fixes them directly. |
 | **bead-review** | Standalone bead housekeeping — status review, dependency management, stale/orphan cleanup. |
 | **grill-with-docs** | Stress-tests a plan against your domain model (`CONTEXT.md`). Sharpens terminology inline. |
 | **improve-codebase-architecture** | Finds deepening opportunities — refactors that turn shallow modules into deep ones for testability and AI-navigability. |
@@ -120,39 +120,39 @@ The skill will:
 1. Read your `CONTEXT.md` for domain context and recorded decisions
 2. **Grill you** on design decisions one question at a time (email provider? verification link expiry? retry behavior?)
 3. Explore your codebase to find constraints and existing patterns
-4. Output a **brief** in `docs/briefs/` with implementation steps
-5. Create **beads** (trackable work items) for each step
+4. Create a **feature bead** with the goal, context, and acceptance criteria
+5. Create **task beads** with implementation-ready specs for each unit of work
 
-The brief is a complete spec — a coding agent can follow it without asking questions.
+Beads are the single source of truth — a coding agent reads them via `bd show <id>` to get the full spec.
 
 ### 3. Write tests (recommended)
 
 ```
-/write-tests docs/briefs/email-verification.md
+/write-tests
 ```
 
-The skill reads the brief and writes tests BEFORE any implementation exists:
+The skill reads the beads and writes tests BEFORE any implementation exists:
 1. Discovers the project's test infrastructure (framework, fixtures, conventions)
-2. Creates interface stubs at the file paths from the brief (function signatures with `NotImplementedError` bodies)
+2. Creates interface stubs at the file paths from the bead specs (function signatures with `NotImplementedError` bodies)
 3. Writes contract tests, integration tests, and acceptance tests — all failing (red)
-4. Appends a `## Test Harness` section to the brief listing all test and stub files
+4. Stores test harness metadata in beads (`bd remember`) for the implementer
 
 This prevents confirmation bias — tests encode the requirement, not the implementation.
 
 ### 4. Implement
 
 ```
-/implement docs/briefs/email-verification.md
+/implement
 ```
 
-The skill reads the brief and implements it:
+The skill reads the beads and implements them:
 1. Claims each bead before starting work on it
-2. If a Test Harness section exists, makes pre-written tests pass (red→green) without modifying test assertions
+2. If a test harness exists, makes pre-written tests pass (red→green) without modifying test assertions
 3. Makes changes layer by layer (data model → business logic → API → UI)
 4. Runs tests after each layer to catch regressions early
 5. Closes beads as each step is verified
 
-It follows the brief exactly. If something is ambiguous, it stops and asks rather than guessing.
+It follows the bead specs exactly. If something is ambiguous, it stops and asks rather than guessing.
 
 ### 5. Validate
 
@@ -161,7 +161,7 @@ It follows the brief exactly. If something is ambiguous, it stops and asks rathe
 ```
 
 The skill acts as an independent reviewer:
-1. Reads the brief and checks the git diff against it
+1. Reads the beads and checks the git diff against them
 2. Runs the full test suite
 3. Starts the local server and tests end-to-end behavior
 4. Creates new beads for any gaps found
@@ -174,16 +174,16 @@ It never fixes issues itself — it reports what's wrong and recommends next ste
 Validation ends with one of three verdicts:
 
 - **SHIP** — Feature works. Commit.
-- **FIX** — Implementation bugs, but the design is sound. The validator auto-generates a fix brief at `docs/briefs/<feature>-fix.md`. Hand it back to implement:
+- **FIX** — Implementation bugs, but the design is sound. The validator auto-generates fix beads with implementation-ready specs. Hand back to implement:
   ```
-  /implement docs/briefs/email-verification-fix.md
+  /implement
   ```
   Then run `/validate` again.
 - **SEND BACK** — The design itself is wrong. Re-implementing won't help. The validator explains what's flawed and why. Take it back to the planner:
   ```
   /plan-feature <paste the design issues from the validation report>
   ```
-  The planner produces a new brief, then restart from step 3 (`/write-tests`).
+  The planner produces new beads, then restart from step 3 (`/write-tests`).
 
 Repeat until you get **SHIP**, then commit.
 

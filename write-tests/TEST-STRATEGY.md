@@ -12,7 +12,7 @@ Test a module's public interface. The most important level — these prevent con
 
 **What they don't test:** How the module achieves the result internally.
 
-**Naming:** `test_<behavior>` not `test_<function_name>`. The behavior comes from the brief.
+**Naming:** `test_<behavior>` not `test_<function_name>`. The behavior comes from the bead spec.
 
 ```python
 # Good — tests behavior
@@ -28,18 +28,18 @@ def test_validate_token_calls_decode_then_check_expiry():
 
 ### Integration tests
 
-Test data flow across module boundaries. At least one per brief to verify wiring.
+Test data flow across module boundaries. At least one per feature to verify wiring.
 
 **What they test:** Data enters at module A's interface and arrives correctly at module B.
 
 **When to write them:**
-- Brief has beads that depend on each other
+- Feature has beads that depend on each other
 - Data transforms as it crosses module boundaries
 - Config/input flows through multiple layers to reach the consumer
 
 ### Acceptance tests
 
-Map 1:1 to Acceptance Criteria lines in the brief. These are the validation contract — what `/validate` checks.
+Map 1:1 to Acceptance Criteria lines in the feature bead. These are the validation contract — what `/validate` checks.
 
 **What they test:** End-to-end user-visible behavior described in plain language.
 
@@ -83,7 +83,7 @@ def calculate_score(features: dict[str, float], weights: WeightConfig) -> Score:
 
 ### Existing modules: extend, don't replace
 
-When the brief modifies an existing module:
+When a bead modifies an existing module:
 1. Read the existing file.
 2. Add new function/method stubs AFTER existing code.
 3. Do NOT touch existing function bodies.
@@ -120,19 +120,19 @@ Always check for existing fixtures first. Reuse `conftest.py`, test factories, h
 
 ### Testing new API endpoints
 
-1. Import app/router from where the brief says it'll be wired.
+1. Import app/router from where the bead says it'll be wired.
 2. Use project's HTTP test client (TestClient, supertest, httptest).
 3. Create route handler stubs that return 501.
 4. Test request shapes, response shapes, status codes, headers.
 
-### Brief references existing modules being modified
+### Bead references existing modules being modified
 
 1. Read existing module and its tests.
-2. Identify which existing tests will break (brief should flag these).
+2. Identify which existing tests will break (bead should flag these).
 3. Write new tests for new behavior only.
-4. In Test Harness section, list tests the implementer will need to update.
+4. Store breaking test info via `bd remember test-harness-breaking` for the implementer.
 5. Add stub methods to existing module without touching existing code.
 
 ### Multiple beads modify the same file
 
-Process beads in brief order. Stubs from earlier beads are available to later ones. Each bead's tests import the same module but test different behaviors.
+Process beads in dependency order (`bd graph`). Stubs from earlier beads are available to later ones. Each bead's tests import the same module but test different behaviors.

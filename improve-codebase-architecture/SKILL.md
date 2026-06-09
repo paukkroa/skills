@@ -76,7 +76,7 @@ Side effects happen inline as decisions crystallize:
 Once a deepening opportunity is grilled and agreed on, hand off to the plan → implement → validate loop:
 
 - Suggest the user run `/plan-feature` with the agreed refactoring scope
-- The planner will create beads and a brief for the coding agent
-- Do NOT create beads or briefs yourself — that's `/plan-feature`'s job
+- The planner will create beads for the coding agent
+- Do NOT create beads yourself — that's `/plan-feature`'s job
 
 This skill identifies *what* to improve. The workflow skills handle *how* to implement it.
