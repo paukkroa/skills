@@ -2,7 +2,7 @@
 name: implement
 description: Execute implementation from beads produced by /plan-feature. Reads bead specs, claims beads, implements changes layer by layer with test verification between each step, and closes beads when done.
 model: sonnet
-allowed-tools: Bash(bd *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
+allowed-tools: Bash(bd create *) Bash(bd update *) Bash(bd close *) Bash(bd dep *) Bash(bd show *) Bash(bd list *) Bash(bd ready *) Bash(bd graph *) Bash(bd remember *) Bash(bd recall *) Bash(bd prime *) Bash(bd doctor *) Bash(bd stale *) Bash(bd orphans *) Bash(bd blocked *) Bash(bd find-duplicates *) Bash(bd duplicate *) Bash(bd upgrade *) Bash(bd status *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
 ---
 
 # Implement
@@ -21,11 +21,11 @@ Execute an implementation from beads. You are the coding agent — read the bead
 
 ### 1. Load beads
 
-Run `bd list --status=open` and `bd ready` to see available work.
+The feature bead ID is passed as argument (e.g. `/implement bead-42`). If no argument, run `bd list --type=feature --status=open` to find it.
 
-Find the feature bead (`--type feature`) — read it with `bd show <id>` for the goal, context files, and acceptance criteria.
+Read the feature bead with `bd show <feature-bead-id>` for the goal, context files, and acceptance criteria.
 
-Read `bd show <id>` for each task bead to get the implementation spec.
+Run `bd list --status=open` and `bd ready` to find task beads. Read `bd show <id>` for each to get the implementation spec.
 
 Read `CONTEXT.md` for domain vocabulary and architecture context.
 

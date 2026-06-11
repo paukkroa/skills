@@ -1,7 +1,7 @@
 ---
 name: bead-review
 description: Review, update, and manage beads without planning or implementing. Standalone bead housekeeping — status review, dependency management, gap analysis, stale/orphan cleanup, and spec-vs-codebase comparison. Use when user wants to check bead status, update beads, manage dependencies, find stale or orphan beads, or do bead housekeeping. NEVER plans features or writes code.
-allowed-tools: Bash(bd *)
+allowed-tools: Bash(bd create *) Bash(bd update *) Bash(bd close *) Bash(bd dep *) Bash(bd show *) Bash(bd list *) Bash(bd ready *) Bash(bd graph *) Bash(bd remember *) Bash(bd recall *) Bash(bd prime *) Bash(bd doctor *) Bash(bd stale *) Bash(bd orphans *) Bash(bd blocked *) Bash(bd find-duplicates *) Bash(bd duplicate *) Bash(bd upgrade *) Bash(bd status *)
 ---
 
 # Bead Review
@@ -19,7 +19,7 @@ Standalone bead management. Review status, update beads, manage dependencies, fi
 
 ### 1. Load context
 
-Read `CONTEXT.md` for domain vocabulary and recorded decisions.
+Read `CONTEXT.md` for domain vocabulary. Read `docs/decisions/` for recorded design decisions.
 Run `bd prime` if available to recover prior session context.
 
 ### 2. Bead health check

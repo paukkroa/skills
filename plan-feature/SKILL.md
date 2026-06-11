@@ -2,7 +2,7 @@
 name: plan-feature
 description: Convert business requirements into implementation-ready beads for a coding agent. Uses grilling interview style to resolve design decisions, explores codebase for constraints, and outputs structured beads. Use when starting new features, converting specs/PRDs into tasks, or preparing work for Codex/coding agents. NEVER writes code.
 effort: high
-allowed-tools: Bash(bd *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
+allowed-tools: Bash(bd create *) Bash(bd update *) Bash(bd close *) Bash(bd dep *) Bash(bd show *) Bash(bd list *) Bash(bd ready *) Bash(bd graph *) Bash(bd remember *) Bash(bd recall *) Bash(bd prime *) Bash(bd doctor *) Bash(bd stale *) Bash(bd orphans *) Bash(bd blocked *) Bash(bd find-duplicates *) Bash(bd duplicate *) Bash(bd upgrade *) Bash(bd status *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
 ---
 
 # Plan
@@ -21,7 +21,7 @@ Convert business requirements into implementation-ready beads. Output is a featu
 
 ### 1. Understand the domain
 
-Read `CONTEXT.md` for domain glossary, architecture, and recorded decisions. Run `bd ready` and `bd list --status=open` to see existing work.
+Read `CONTEXT.md` for domain glossary and architecture. Read `docs/decisions/` for recorded design decisions. Run `bd ready` and `bd list --status=open` to see existing work.
 
 If any term in the user's request conflicts with `CONTEXT.md`, call it out: _"Your glossary defines X as Y, but you seem to mean Z — which is it?"_
 
@@ -33,6 +33,8 @@ Interview the user **one question at a time**, walking down each branch of the d
 - If the question can be answered by exploring the codebase, explore instead of asking
 - Cross-reference against `CONTEXT.md` vocabulary — sharpen fuzzy language into precise canonical terms
 - Stress-test with concrete scenarios that probe edge cases
+
+**Open questions.** When the user can't answer a question (needs stakeholder input, needs research, says "I don't know yet"), add it to an **open questions list** instead of blocking. Label each with a short ID (Q1, Q2, ...) and note which design decisions depend on it. Continue grilling other branches that don't depend on the unanswered question.
 
 Focus areas:
 - **Where does this live architecturally?** Use the [deep module lens](../improve-codebase-architecture/LANGUAGE.md): depth, seams, locality, leverage. Apply the deletion test to proposed new modules.
@@ -54,19 +56,26 @@ Before creating beads, evaluate the structural impact using the [deep module pri
 
 Create one bead of `--type feature` that captures the high-level spec. This is the root — all task beads relate back to it.
 
+Use a heredoc for the description to avoid permission prompts from `#` characters in quoted strings:
+
 ```bash
 bd create --type feature --priority <0-4> \
   --title "<Feature name>" \
-  --description "## Goal
+  --description "$(cat <<'BEAD'
+Goal
 <1-2 sentences: what this achieves and why>
 
-## Context files
+Context files
 - CONTEXT.md — domain glossary and architecture
 - <file1> — <why to read it>
 
-## Acceptance Criteria
-<MANDATORY. Behavioral 'when X then Y' assertions. See BEAD-SPEC-FORMAT.md for rules.>"
+Acceptance Criteria
+<MANDATORY. Behavioral 'when X then Y' assertions. See BEAD-SPEC-FORMAT.md for rules.>
+BEAD
+)"
 ```
+
+**Do NOT use `#` headers inside bead descriptions.** Use plain text section labels (e.g. `Goal` not `## Goal`). The `#` character inside quoted shell arguments triggers security validation prompts.
 
 **Acceptance Criteria are mandatory.** Every feature bead must include behavioral "when X then Y" assertions that are testable, implementation-independent, and cover every user-visible outcome. These are what `/write-tests` turns into failing tests and what `/validate` checks against. Vague checklists ("verify it works") are not acceptance criteria.
 
@@ -100,27 +109,45 @@ For standalone bead review/cleanup without planning a new feature, use `/bead-re
 
 If new domain terms were resolved during grilling, update `CONTEXT.md` inline using the format in [CONTEXT-FORMAT.md](../grill-with-docs/CONTEXT-FORMAT.md). Only add terms specific to this project's domain — not general programming concepts.
 
-### 7. Record decisions in CONTEXT.md
+### 7. Record decisions
 
-When a design decision during grilling is hard to reverse, surprising without context, and the result of a real trade-off — record it in `CONTEXT.md` under the Decisions section. This keeps all project knowledge in one place.
+When a design decision during grilling is hard to reverse, surprising without context, and the result of a real trade-off — record it as a decision file in `docs/decisions/`. See [CONTEXT-FORMAT.md](../grill-with-docs/CONTEXT-FORMAT.md) for the file format and numbering.
 
-## Final message: copy-paste handoff
+## Final message
+
+### If open questions remain
+
+Do NOT produce the handoff yet. Instead, present a compact summary the user can take to stakeholders:
+
+```
+Open Questions
+
+Q1: <question> — blocks: <which design decisions / beads depend on the answer>
+Q2: <question> — blocks: <which design decisions / beads depend on the answer>
+...
+
+Return with answers and we'll finish planning.
+```
+
+When the user returns with one or more answers, incorporate them into the design, re-grill if the answer opens new branches, and remove answered questions from the list. **Only produce the handoff when all open questions are resolved.**
+
+### Handoff (all questions resolved)
 
 Planning is done. The user picks their next step — do not implement yourself.
 
-Provide all handoff formats so the user can paste into their chosen agent:
+Provide all handoff formats so the user can paste into their chosen agent. **Include the feature bead ID** so the receiving skill/agent knows which feature to work on.
 
 **Test-first (recommended) — write tests before implementation:**
 ```
-/write-tests
+/write-tests <feature-bead-id>
 ```
 
 **Skip to implementation (tests written by implementer):**
 ```
-/implement
+/implement <feature-bead-id>
 ```
 
 **For other agents (no skills):**
 ```
-Run `bd list --status=open` to see all work. For each bead, run `bd show <id>` to get the full spec. Check `bd graph` for execution order. Read CONTEXT.md for domain vocabulary. Implement beads in dependency order. Run tests after each bead. Claim with `bd update <id> --claim`, close with `bd close <id>`.
+The feature bead is <feature-bead-id>. Run `bd show <feature-bead-id>` for goal, context files, and acceptance criteria. Run `bd list --status=open` to see all task beads. For each, run `bd show <id>` for the full spec. Check `bd graph` for execution order. Read CONTEXT.md for domain vocabulary. Implement beads in dependency order. Run tests after each bead. Claim with `bd update <id> --claim`, close with `bd close <id>`.
 ```

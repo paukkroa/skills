@@ -1,7 +1,7 @@
 ---
 name: init-project
 description: One-time project onboarding that explores the codebase, generates CONTEXT.md, sets up beads tracking, reads existing specs/docs, creates a gap analysis, and prepares the plan/implement/validate workflow. Use when joining a new project, starting work on an unfamiliar repo, or bootstrapping the AI-assisted workflow for the first time.
-allowed-tools: Bash(bd *)
+allowed-tools: Bash(bd create *) Bash(bd update *) Bash(bd close *) Bash(bd dep *) Bash(bd show *) Bash(bd list *) Bash(bd ready *) Bash(bd graph *) Bash(bd remember *) Bash(bd recall *) Bash(bd prime *) Bash(bd doctor *) Bash(bd stale *) Bash(bd orphans *) Bash(bd blocked *) Bash(bd find-duplicates *) Bash(bd duplicate *) Bash(bd upgrade *) Bash(bd status *) Bash(bd init *)
 ---
 
 # Init Project

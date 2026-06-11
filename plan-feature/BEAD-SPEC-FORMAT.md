@@ -8,23 +8,30 @@ How to write implementation-ready bead descriptions. Beads are the single source
 
 Created with `--type feature`. Contains the high-level goal, context, and acceptance criteria. Task beads reference this for the big picture.
 
-```
+Use a heredoc for descriptions to avoid permission prompts from `#` characters:
+
+```bash
 bd create --type feature --priority 2 \
   --title "Add email verification on signup" \
-  --description "## Goal
+  --description "$(cat <<'BEAD'
+Goal
 Email verification prevents fake accounts and ensures deliverability.
 
-## Context files
+Context files
 - CONTEXT.md — domain glossary and architecture
 - src/auth/models.py — existing User model
 - src/routes/signup.py — current signup flow
 
-## Acceptance Criteria
+Acceptance Criteria
 - When a user signs up with a valid email, a verification email is sent within 30 seconds
 - When a user clicks the verification link before expiry, their account is marked verified
 - When a user clicks an expired verification link, they see an error with a resend option
-- Existing signup flow for already-verified paths produces identical behavior to before this change"
+- Existing signup flow for already-verified paths produces identical behavior to before this change
+BEAD
+)"
 ```
+
+**Do NOT use `#` headers inside bead descriptions.** Use plain text section labels instead. The `#` character inside quoted shell arguments triggers security validation prompts.
 
 **Acceptance Criteria are mandatory.** Every feature bead must include behavioral "when X then Y" assertions that are testable, implementation-independent, and cover every user-visible outcome. These are what `/write-tests` turns into failing tests and what `/validate` checks against.
 
@@ -42,29 +49,32 @@ NOT acceptable:
 
 Created with `--type task`. Contains the implementation spec for one bead of work.
 
-```
+```bash
 bd create --type task --priority 2 \
   --title "Add TokenService with verification token generation" \
-  --description "## Files
+  --description "$(cat <<'BEAD'
+Files
 src/auth/tokens.py (new)
 src/auth/models.py (modify — add verification_token field)
 
-## What to do
+What to do
 1. Add VerificationToken model to src/auth/models.py — fields: token (str), user_id (int), expires_at (datetime), used (bool)
 2. Add TokenService class to src/auth/tokens.py with:
    - generate_token(user_id: int) -> VerificationToken — creates token with 24h expiry
    - validate_token(token: str) -> TokenResult — returns valid/expired/invalid status
 3. Add VerificationToken to the User relationship in src/auth/models.py
 
-## Design decisions
-- \"Use cryptographic random tokens, not JWT\" — user decision during grilling
-- \"Token expiry: 24 hours\" — per domain requirements
-- \"One active token per user\" — previous tokens invalidated on new generation
+Design decisions
+- "Use cryptographic random tokens, not JWT" — user decision during grilling
+- "Token expiry: 24 hours" — per domain requirements
+- "One active token per user" — previous tokens invalidated on new generation
 
-## Test expectations
+Test expectations
 - Contract: generate_token produces unique tokens with correct expiry
 - Contract: validate_token with valid/expired/used/malformed tokens
-- Edge: generating new token invalidates previous ones"
+- Edge: generating new token invalidates previous ones
+BEAD
+)"
 ```
 
 ## Rules

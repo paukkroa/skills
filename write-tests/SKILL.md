@@ -2,7 +2,7 @@
 name: write-tests
 description: Write failing tests from beads BEFORE implementation exists. Creates interface stubs and tests that encode the behavioral contract. The implementer then makes these tests pass (red->green). Use after /plan-feature and before /implement to prevent confirmation bias in testing.
 model: sonnet
-allowed-tools: Bash(bd *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
+allowed-tools: Bash(bd create *) Bash(bd update *) Bash(bd close *) Bash(bd dep *) Bash(bd show *) Bash(bd list *) Bash(bd ready *) Bash(bd graph *) Bash(bd remember *) Bash(bd recall *) Bash(bd prime *) Bash(bd doctor *) Bash(bd stale *) Bash(bd orphans *) Bash(bd blocked *) Bash(bd find-duplicates *) Bash(bd duplicate *) Bash(bd upgrade *) Bash(bd status *) Bash(git add *) Bash(git commit *) Bash(git push *) Bash(git branch *) Bash(git status *)
 ---
 
 # Write Tests
@@ -25,11 +25,11 @@ Read beads produced by `/plan-feature` and write tests BEFORE any implementation
 
 ### 1. Load context
 
-Run `bd list --status=open` to see all beads. Identify the feature bead (`--type feature`) and all task beads.
+The feature bead ID is passed as argument (e.g. `/write-tests bead-42`). If no argument, run `bd list --type=feature --status=open` to find it.
 
-Read the feature bead with `bd show <id>` to get the goal, context files, and acceptance criteria.
+Read the feature bead with `bd show <feature-bead-id>` for the goal, context files, and acceptance criteria.
 
-Read each task bead with `bd show <id>` to get the implementation spec.
+Run `bd list --status=open` to find all task beads. Read each with `bd show <id>` to get the implementation spec.
 
 Read `CONTEXT.md` for domain vocabulary and architecture context.
 
@@ -125,19 +125,36 @@ After all bead-level tests, write tests for each line in the feature bead's "Acc
 
 Verify they all fail (red).
 
-### 7. Store test harness info
+### 7. Create test harness bead
 
-Store test harness metadata using `bd remember` so the implementer can discover it:
+Create a test bead that captures everything the implementer needs to know about the test harness:
 
 ```bash
-bd remember test-harness-stubs "<comma-separated stub file paths>"
-bd remember test-harness-tests "<comma-separated test file paths>"
-bd remember test-harness-baseline "<N> tests passing"
+bd create --type=test "Test harness for <feature name>" --body "
+## Test Harness
+
+**Feature bead**: <feature-bead-id>
+**Baseline**: <N> tests passing before this feature
+
+### Stub files
+- <path/to/stub1.py>
+- <path/to/stub2.py>
+
+### Test files
+- <path/to/test_file1.py>
+- <path/to/test_file2.py>
+
+### Breaking tests
+<test files the implementer needs to update, or 'none'>
+
+### Notes
+<any context the implementer needs — e.g. fixture choices, why certain mocks were used>
+"
 ```
 
-Also store notes about tests that will break:
+Then wire dependencies:
 ```bash
-bd remember test-harness-breaking "<test files the implementer needs to update>"
+bd dep <test-bead-id> --on <feature-bead-id>
 ```
 
 ### 8. Final verification
@@ -153,12 +170,12 @@ Provide both handoff formats:
 
 **For agents with the `/implement` skill:**
 ```
-/implement
+/implement <feature-bead-id>
 ```
 
 **For other agents:**
 ```
-Run `bd list --status=open` to see all work. A test harness already exists — run `bd recall test-harness-stubs` and `bd recall test-harness-tests` for file paths. Your job is to make all failing tests pass (red->green) without modifying test assertions. Implement beads in dependency order (check `bd graph`). Run the test suite after each bead. Do not make design decisions — the bead specs have all constraints.
+The feature bead is <feature-bead-id>. Run `bd show <feature-bead-id>` for goal and acceptance criteria. A test harness already exists — run `bd recall test-harness-stubs` and `bd recall test-harness-tests` for file paths. Your job is to make all failing tests pass (red->green) without modifying test assertions. Implement beads in dependency order (check `bd graph`). Run the test suite after each bead. Do not make design decisions — the bead specs have all constraints.
 ```
 
 ## Constraints

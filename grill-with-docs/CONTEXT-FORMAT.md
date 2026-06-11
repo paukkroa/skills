@@ -35,13 +35,42 @@ _Avoid_: Client, buyer, account
 
 - "account" was used to mean both **Customer** and **User** — resolved: these are distinct concepts.
 
+```
+
 ## Decisions
 
-Record architectural and design decisions that are hard to reverse, surprising without context, and the result of a real trade-off. Each entry is a short paragraph: what was decided and why.
+Decisions are stored as separate files in `docs/decisions/`, not inside `CONTEXT.md`. See the Decision format section below.
 
-- **Event-sourced write model, projected read model**: Orders are event-sourced for auditability; the read model is projected into Postgres for query performance. We considered a single CRUD model but need the full event history for compliance.
-- **Domain events over synchronous HTTP between contexts**: Ordering and Billing communicate via events, not direct calls. Decouples deployment and allows each context to evolve independently.
+### Decision file format
+
+Each decision lives at `docs/decisions/NNN-short-title.md`:
+
+```md
+# NNN: Short Title
+
+Status: accepted | superseded by NNN | deprecated
+Date: YYYY-MM-DD
+
+## Context
+What prompted this decision. The forces at play.
+
+## Decision
+What was decided and why. One or two paragraphs max.
+
+## Consequences
+What follows from this decision — both positive and negative.
 ```
+
+Numbering is sequential (`001`, `002`, ...). Use `ls docs/decisions/` to find the next number.
+
+### When to record a decision
+
+Only record when all three conditions are met:
+1. Hard to reverse
+2. Surprising without context
+3. The result of a real trade-off
+
+Skip ephemeral reasons ("not worth it right now") and self-evident ones.
 
 ## Rules
 

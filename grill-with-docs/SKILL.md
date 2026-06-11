@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs
-description: Grilling session that challenges your plan against the existing domain model, sharpens terminology, and updates CONTEXT.md inline as decisions crystallise. Use when user wants to stress-test a plan against their project's language and documented decisions.
+description: Grilling session that challenges your plan against the existing domain model, sharpens terminology, updates CONTEXT.md inline, and records decisions in docs/decisions/. Use when user wants to stress-test a plan against their project's language and documented decisions.
 attribution: Derived from Matt Pocock's skills (https://github.com/mattpocock/skills). All functional credit goes to Matt Pocock.
 ---
 
@@ -68,8 +68,8 @@ When a term is resolved, update `CONTEXT.md` right there. Don't batch these up �
 
 Don't couple `CONTEXT.md` to implementation details. Only include terms that are meaningful to domain experts.
 
-### Record surprising decisions in CONTEXT.md
+### Record surprising decisions
 
-When a design decision is hard to reverse, surprising without context, and the result of a real trade-off — record it in `CONTEXT.md` under a "Decisions" section. This keeps all project knowledge in one place rather than scattered across separate files.
+When a design decision is hard to reverse, surprising without context, and the result of a real trade-off — record it as a file in `docs/decisions/`. See [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md) for the file format and numbering.
 
 </supporting-info>

@@ -105,7 +105,8 @@ Open Claude Code in your project directory and run:
 ```
 
 This explores your codebase and creates:
-- **`CONTEXT.md`** — domain glossary, architecture overview, key conventions, and recorded decisions
+- **`CONTEXT.md`** — domain glossary, architecture overview, and key conventions
+- **`docs/decisions/`** — recorded design decisions (ADRs)
 - **Beads tracking** — lightweight task tracking via the `bd` CLI
 
 You only run this once per project. It's read-only — no code changes.
@@ -117,7 +118,7 @@ You only run this once per project. It's read-only — no code changes.
 ```
 
 The skill will:
-1. Read your `CONTEXT.md` for domain context and recorded decisions
+1. Read your `CONTEXT.md` for domain context and `docs/decisions/` for recorded decisions
 2. **Grill you** on design decisions one question at a time (email provider? verification link expiry? retry behavior?)
 3. Explore your codebase to find constraints and existing patterns
 4. Create a **feature bead** with the goal, context, and acceptance criteria
