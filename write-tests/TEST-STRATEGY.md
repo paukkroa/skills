@@ -130,7 +130,7 @@ Always check for existing fixtures first. Reuse `conftest.py`, test factories, h
 1. Read existing module and its tests.
 2. Identify which existing tests will break (bead should flag these).
 3. Write new tests for new behavior only.
-4. Store breaking test info via `bd remember test-harness-breaking` for the implementer.
+4. Note breaking tests in the test harness bead for the implementer.
 5. Add stub methods to existing module without touching existing code.
 
 ### Multiple beads modify the same file

@@ -16,6 +16,7 @@ Convert business requirements into implementation-ready beads. Output is a featu
 3. **Do NOT enter plan mode.** Stay in this skill's workflow.
 4. **Max 2 exploration attempts** per question. If codebase exploration doesn't answer it, ask the user.
 5. **Use beads for ALL task tracking.** No TodoWrite, TaskCreate, or markdown TODOs.
+6. **Relative paths only in beads.** All file paths in bead descriptions MUST be relative to the repo root (e.g. `src/auth/models.py`). NEVER absolute paths. Agents may work in git worktrees where absolute paths point to the wrong directory.
 
 ## Process
 
@@ -117,21 +118,42 @@ When a design decision during grilling is hard to reverse, surprising without co
 
 ### If open questions remain
 
-Do NOT produce the handoff yet. Instead, present a compact summary the user can take to stakeholders:
+**Do NOT produce the handoff.** Implementation must not start while open questions exist — unanswered questions mean the spec is incomplete and the implementer will guess wrong. Only skip this gate if the user explicitly says they want the handoff despite open questions (e.g. "give me the handoff anyway", "I'll figure it out during implementation").
 
-```
+Create an open questions bead and present a compact summary the user can take to stakeholders.
+
+**Create the open questions bead:**
+
+```bash
+bd create --type task --priority 0 \
+  --title "Resolve open questions for <feature name>" \
+  --description "$(cat <<'BEAD'
 Open Questions
 
-Q1: <question> — blocks: <which design decisions / beads depend on the answer>
-Q2: <question> — blocks: <which design decisions / beads depend on the answer>
-...
+Q1: <question>
+Blocks: <which design decisions / task beads depend on the answer>
 
-Return with answers and we'll finish planning.
+Q2: <question>
+Blocks: <which design decisions / task beads depend on the answer>
+
+Return with answers to continue planning.
+BEAD
+)"
 ```
 
-When the user returns with one or more answers, incorporate them into the design, re-grill if the answer opens new branches, and remove answered questions from the list. **Only produce the handoff when all open questions are resolved.**
+**Set it to block all task beads** so implementation cannot start until the questions are resolved:
 
-### Handoff (all questions resolved)
+```bash
+bd dep add <open-questions-bead-id> <task-bead-id-1>
+bd dep add <open-questions-bead-id> <task-bead-id-2>
+...
+```
+
+Present the open questions list in conversation so the user can take it to stakeholders.
+
+When the user returns with one or more answers, incorporate them into the design, re-grill if the answer opens new branches, and update the open questions bead description to remove answered questions. **When all questions are resolved, close the open questions bead** (`bd close <id>`) — this unblocks the task beads — and produce the handoff.
+
+### Handoff (all questions resolved, or user explicitly overrides)
 
 Planning is done. The user picks their next step — do not implement yourself.
 

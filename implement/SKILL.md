@@ -16,10 +16,27 @@ Execute an implementation from beads. You are the coding agent — read the bead
 3. **Do NOT make design decisions.** If a bead spec is ambiguous, stop and describe the ambiguity — do not guess.
 4. **Max 2 attempts** at any fix. If something isn't working after 2 tries, describe the problem and stop.
 5. **Use beads for tracking.** `bd update <id> --claim` when starting a bead, `bd close <id>` when done.
+6. **Worktree awareness.** You may be running in a git worktree. All file paths are relative to repo root. Run tests and all commands from the current working directory (`pwd`). See "Worktree setup" in the Process section.
 
 ## Process
 
-### 1. Load beads
+### 1. Worktree setup
+
+Check if you are in a git worktree:
+
+```bash
+git rev-parse --git-dir
+```
+
+If the output is an absolute path containing `/worktrees/` (e.g. `/path/to/main/.git/worktrees/feature-x`), you are in a worktree. In that case:
+
+- **All file paths are relative to `pwd`.** Bead specs use repo-relative paths (e.g. `src/auth/models.py`). These resolve correctly from the worktree root.
+- **Run all commands from `pwd`.** Tests, build, lint — everything runs from the worktree directory.
+- **Beads database.** If `bd list` fails (database not found), the `.dolt/` directory is in the main repo. Symlink it: `ln -s "$(git rev-parse --git-dir | sed 's|/\.git/worktrees/.*||')/.dolt" .dolt` — or ask the user.
+
+If the output is `.git`, you are in the main repo. No special handling needed.
+
+### 2. Load beads
 
 The feature bead ID is passed as argument (e.g. `/implement bead-42`). If no argument, run `bd list --type=feature --status=open` to find it.
 
@@ -29,7 +46,7 @@ Run `bd list --status=open` and `bd ready` to find task beads. Read `bd show <id
 
 Read `CONTEXT.md` for domain vocabulary and architecture context.
 
-### 2. Verify preconditions
+### 3. Verify preconditions
 
 Before writing any code:
 
@@ -37,14 +54,14 @@ Before writing any code:
 - Check that files referenced in bead descriptions still exist at the expected paths
 - Run the test suite to establish a passing baseline (check `CONTEXT.md` or `bd recall test-command` for the exact command)
 - Note the test count — you must not reduce it
-- Check for a test harness: run `bd recall test-harness-stubs`. If it returns results:
+- Check for a test harness bead: look for a bead titled "Test harness for ..." in `bd list --status=open`. If one exists:
   - Tests were pre-written by `/write-tests`. Your job is to make them pass (red->green).
-  - Run `bd recall test-harness-tests` to get the test file paths.
+  - Run `bd show <test-harness-bead-id>` to get stub file paths and test file paths.
   - Read each test file listed. Understand what the tests expect.
   - Note the stub files — these define the interface you must implement.
   - Do NOT modify test assertions. If a test is wrong (tests the wrong behavior, not implementation preference), flag it and stop.
 
-### 3. Execute bead by bead
+### 4. Execute bead by bead
 
 Follow the execution order from `bd graph`. For each task bead:
 
@@ -62,7 +79,7 @@ Follow the execution order from `bd graph`. For each task bead:
 
 **Close:** `bd close <id>`
 
-### 4. Layer-by-layer for cross-cutting changes
+### 5. Layer-by-layer for cross-cutting changes
 
 When a bead touches multiple architectural layers (models, scorers, routes, config, tests):
 
@@ -75,7 +92,7 @@ Do NOT implement all layers at once then test. Verify between each layer.
 
 When a test harness exists, each layer should turn more pre-written tests green. Track progress — after each layer, note which pre-written tests now pass.
 
-### 5. Final verification
+### 6. Final verification
 
 After all beads are closed:
 

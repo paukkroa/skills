@@ -20,10 +20,28 @@ Read beads produced by `/plan-feature` and write tests BEFORE any implementation
 7. **Use beads for context only.** Read beads with `bd show <id>` but do NOT claim or close them — they stay open for the implementer.
 8. **Git commits allowed on feature branches only.** Before any `git add` / `git commit` / `git push`, run `git branch --show-current` and verify the branch is NOT `main`, `master`, `dev`, `stg`, `qa`, or `prod`. If on a protected branch, stop and tell the user to create a feature branch first. On a feature branch: stage, commit, and push freely.
 9. **Follow existing test patterns exactly.** Use the project's test framework, directory structure, naming conventions, and fixture patterns. Explore before writing.
+10. **Worktree awareness.** You may be running in a git worktree. All file paths are relative to repo root. Create stubs and tests at repo-relative paths from `pwd`. Run all commands from the current working directory. See "Worktree setup" in the Process section.
 
 ## Process
 
-### 1. Load context
+### 1. Worktree setup
+
+Check if you are in a git worktree:
+
+```bash
+git rev-parse --git-dir
+```
+
+If the output is an absolute path containing `/worktrees/` (e.g. `/path/to/main/.git/worktrees/feature-x`), you are in a worktree. In that case:
+
+- **All file paths are relative to `pwd`.** Bead specs use repo-relative paths. These resolve correctly from the worktree root.
+- **Create stubs and test files relative to `pwd`.** Never use absolute paths.
+- **Run all commands from `pwd`.** Tests, linters — everything runs from the worktree directory.
+- **Beads database.** If `bd list` fails (database not found), the `.dolt/` directory is in the main repo. Symlink it: `ln -s "$(git rev-parse --git-dir | sed 's|/\.git/worktrees/.*||')/.dolt" .dolt` — or ask the user.
+
+If the output is `.git`, you are in the main repo. No special handling needed.
+
+### 2. Load context
 
 The feature bead ID is passed as argument (e.g. `/write-tests bead-42`). If no argument, run `bd list --type=feature --status=open` to find it.
 
@@ -33,7 +51,7 @@ Run `bd list --status=open` to find all task beads. Read each with `bd show <id>
 
 Read `CONTEXT.md` for domain vocabulary and architecture context.
 
-### 2. Discover test infrastructure
+### 3. Discover test infrastructure
 
 Before writing anything, understand how this project tests:
 
@@ -47,7 +65,7 @@ If the project has no test infrastructure at all, ask the user which framework t
 
 Record the current test count. You must not break existing tests.
 
-### 3. Analyze beads for test targets
+### 4. Analyze beads for test targets
 
 For each task bead, extract from its description:
 
@@ -65,7 +83,7 @@ Classify each test target by level. See [TEST-STRATEGY.md](TEST-STRATEGY.md) for
 
 Do NOT write tests for internal/private functions. Internal structure is the implementer's decision.
 
-### 4. Create interface stubs
+### 5. Create interface stubs
 
 For each module that tests need to import, create a stub file:
 
@@ -83,7 +101,7 @@ For each module that tests need to import, create a stub file:
 - Import of internal dependencies (the implementer decides internal structure)
 - Docstrings describing HOW (describe WHAT the function does in one line, not the algorithm)
 
-### 5. Write tests bead by bead
+### 6. Write tests bead by bead
 
 Follow the execution order from `bd graph`. For each task bead:
 
@@ -115,7 +133,7 @@ Follow the execution order from `bd graph`. For each task bead:
 
 Record the failure output — it's the implementer's target.
 
-### 6. Write acceptance tests
+### 7. Write acceptance tests
 
 After all bead-level tests, write tests for each line in the feature bead's "Acceptance Criteria" section:
 
@@ -125,46 +143,49 @@ After all bead-level tests, write tests for each line in the feature bead's "Acc
 
 Verify they all fail (red).
 
-### 7. Create test harness bead
+### 8. Create test harness bead
 
-Create a test bead that captures everything the implementer needs to know about the test harness:
+Create a task bead that captures everything the implementer needs to know about the test harness. Use `--type task` (not `--type test` — that is not a valid bd type). Use heredoc and plain text labels (no `#` headers) to avoid shell security prompts:
 
 ```bash
-bd create --type=test "Test harness for <feature name>" --body "
-## Test Harness
+bd create --type task --priority 1 \
+  --title "Test harness for <feature name>" \
+  --description "$(cat <<'BEAD'
+Test Harness
 
-**Feature bead**: <feature-bead-id>
-**Baseline**: <N> tests passing before this feature
+Feature bead: <feature-bead-id>
+Baseline: <N> tests passing before this feature
 
-### Stub files
+Stub files
 - <path/to/stub1.py>
 - <path/to/stub2.py>
 
-### Test files
+Test files
 - <path/to/test_file1.py>
 - <path/to/test_file2.py>
 
-### Breaking tests
+Breaking tests
 <test files the implementer needs to update, or 'none'>
 
-### Notes
+Notes
 <any context the implementer needs — e.g. fixture choices, why certain mocks were used>
-"
+BEAD
+)"
 ```
 
-Then wire dependencies:
+Then wire dependencies so the implementer sees it:
 ```bash
-bd dep <test-bead-id> --on <feature-bead-id>
+bd dep add <feature-bead-id> <test-harness-bead-id>
 ```
 
-### 8. Final verification
+### 9. Final verification
 
 - Run the full test suite one final time.
 - Existing tests: all pass (count matches baseline from step 2).
 - New tests: all fail with `NotImplementedError` or equivalent — not import errors, not syntax errors. Clean failures only.
 - List all files created/modified for the user's review.
 
-### 9. Handoff
+### 10. Handoff
 
 Provide both handoff formats:
 
@@ -175,7 +196,7 @@ Provide both handoff formats:
 
 **For other agents:**
 ```
-The feature bead is <feature-bead-id>. Run `bd show <feature-bead-id>` for goal and acceptance criteria. A test harness already exists — run `bd recall test-harness-stubs` and `bd recall test-harness-tests` for file paths. Your job is to make all failing tests pass (red->green) without modifying test assertions. Implement beads in dependency order (check `bd graph`). Run the test suite after each bead. Do not make design decisions — the bead specs have all constraints.
+The feature bead is <feature-bead-id>. Run `bd show <feature-bead-id>` for goal and acceptance criteria. A test harness bead exists — find it via `bd list --status=open` (titled "Test harness for ...") and run `bd show <id>` for stub and test file paths. Your job is to make all failing tests pass (red->green) without modifying test assertions. Implement beads in dependency order (check `bd graph`). Run the test suite after each bead. Do not make design decisions — the bead specs have all constraints.
 ```
 
 ## Constraints

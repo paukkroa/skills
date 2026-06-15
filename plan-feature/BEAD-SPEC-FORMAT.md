@@ -80,6 +80,7 @@ BEAD
 ## Rules
 
 - **Be concrete.** File paths, class names, method signatures. Not "update the service" but "add `calculate_discount(order: Order, rules: DiscountRules) -> Discount` to `OrderProcessor` in `src/orders/processor.py`."
+- **Relative paths only.** All file paths in bead descriptions MUST be relative to the repo root (e.g. `src/auth/models.py`). NEVER use absolute paths (e.g. `/Users/joe/project/src/auth/models.py`). Agents may work in git worktrees where absolute paths point to the wrong directory.
 - **No code bodies.** Specify function signatures (name, params, return type) and behavioral contracts ("given X input, returns Y"). Never write method implementations, class bodies, or algorithm steps in code blocks. The bead defines the WHAT and the interface — the implementer and test writer decide the HOW.
 - **Include current state.** If building on prior work, say what exists and what's remaining.
 - **Quote design decisions.** The coding agent wasn't in the grilling session. It needs the WHY, not just the WHAT.
@@ -91,12 +92,9 @@ Modeled entirely by bead dependencies. Use `bd dep add <blocker-id> <blocked-id>
 
 ## Test Harness (added by `/write-tests`)
 
-After `/write-tests` runs, it stores test harness metadata using `bd remember`:
-- `bd remember test-harness-stubs "path1, path2"` — stub files created
-- `bd remember test-harness-tests "path1, path2"` — test files created
-- `bd remember test-harness-baseline "142 tests passing"` — baseline count
+After `/write-tests` runs, it creates a **test harness bead** (`--type task`) containing stub file paths, test file paths, baseline test count, and breaking test notes. This bead is wired as a dependency of the feature bead so the implementer sees it via `bd graph`.
 
-The implementer checks `bd recall test-harness-stubs` to discover if pre-written tests exist.
+The implementer checks for a test harness bead by looking for a bead titled "Test harness for ..." in `bd list --status=open`.
 
 ## Constraints
 

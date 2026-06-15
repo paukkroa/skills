@@ -13,26 +13,44 @@ Review completed implementation against the original bead specs. Focus is **func
 ## Hard rules
 
 1. **Git commits allowed on feature branches only.** Before any `git add` / `git commit` / `git push`, run `git branch --show-current` and verify the branch is NOT `main`, `master`, `dev`, `stg`, `qa`, or `prod`. If on a protected branch, stop and tell the user to create a feature branch first. On a feature branch: stage, commit, and push freely.
-2. **Do NOT fix bugs yourself.** No code edits, no config changes, no YAML tweaks, no "temporary" workarounds. Report what's wrong and how to fix it. The user decides whether to fix manually or send back to the coding agent. Even obvious one-line fixes go through the process — create a bead, describe the fix direction, recommend SHIP, FIX, or SEND BACK.
+2. **Worktree awareness.** You may be running in a git worktree. All file paths are relative to repo root. Run tests, server, and all commands from the current working directory (`pwd`). Check logs relative to `pwd`. See "Worktree setup" in the Process section.
+3. **Do NOT fix bugs yourself.** No code edits, no config changes, no YAML tweaks, no "temporary" workarounds. Report what's wrong and how to fix it. The user decides whether to fix manually or send back to the coding agent. Even obvious one-line fixes go through the process — create a bead, describe the fix direction, recommend SHIP, FIX, or SEND BACK.
    - **FIX** = implementation bugs, minor gaps. The design is sound, the code just needs fixes. Auto-generate fix beads (step 9).
    - **SEND BACK** = design is wrong, scope is wrong, approach is wrong. The bead specs themselves were flawed. Explain what's wrong with the design so the user can re-plan with `/plan-feature` (step 10).
-3. **Max 2 debug attempts** when investigating an issue. If root cause isn't clear, describe what you see and ask the user.
-4. **Use beads for tracking.** Create new beads for gaps found. Close beads that are verified complete.
-5. **Functional focus.** Does the feature work as specified? Does anything break downstream? Not: is the code pretty?
-6. **Fresh context.** Work from the beads, CONTEXT.md, and git diff only. Do not rely on the implementation conversation — you are a separate verifier, not the same agent that wrote the code.
-7. **Runtime evidence required.** At least the happy path MUST be verified by starting the server and making a real request. "Math verified" or "code looks correct" is not sufficient for a SHIP recommendation. If you cannot start the server, say so explicitly — never silently substitute code reading for runtime testing.
-8. **Trace the full data path.** Before verifying individual pieces, map the data flow from source (config/input) through every intermediary function to the final consumer (API response/side effect). Verify each handoff — a correct function that never receives its input is a broken feature.
+4. **Max 2 debug attempts** when investigating an issue. If root cause isn't clear, describe what you see and ask the user.
+5. **Use beads for tracking.** Create new beads for gaps found. Close beads that are verified complete.
+6. **Functional focus.** Does the feature work as specified? Does anything break downstream? Not: is the code pretty?
+7. **Fresh context.** Work from the beads, CONTEXT.md, and git diff only. Do not rely on the implementation conversation — you are a separate verifier, not the same agent that wrote the code.
+8. **Runtime evidence required.** At least the happy path MUST be verified by starting the server and making a real request. "Math verified" or "code looks correct" is not sufficient for a SHIP recommendation. If you cannot start the server, say so explicitly — never silently substitute code reading for runtime testing.
+9. **Trace the full data path.** Before verifying individual pieces, map the data flow from source (config/input) through every intermediary function to the final consumer (API response/side effect). Verify each handoff — a correct function that never receives its input is a broken feature.
 
 ## Process
 
-### 1. Gather context
+### 1. Worktree setup
+
+Check if you are in a git worktree:
+
+```bash
+git rev-parse --git-dir
+```
+
+If the output is an absolute path containing `/worktrees/` (e.g. `/path/to/main/.git/worktrees/feature-x`), you are in a worktree. In that case:
+
+- **All file paths are relative to `pwd`.** Bead specs use repo-relative paths. These resolve correctly from the worktree root.
+- **Run tests, server, and log checks from `pwd`.** The worktree has the full working tree.
+- **Use `git diff` normally.** Git commands work correctly in worktrees.
+- **Beads database.** If `bd list` fails (database not found), the `.dolt/` directory is in the main repo. Symlink it: `ln -s "$(git rev-parse --git-dir | sed 's|/\.git/worktrees/.*||')/.dolt" .dolt` — or ask the user.
+
+If the output is `.git`, you are in the main repo. No special handling needed.
+
+### 2. Gather context
 
 Run `bd list` to see all beads and their status.
 Run `bd show <id>` for each relevant bead — both the feature bead (goal + acceptance criteria) and task beads (implementation specs).
 
 Read `CONTEXT.md` for domain vocabulary.
 
-### 2. Check what changed
+### 3. Check what changed
 
 Run `git diff --name-only` to see modified files.
 Run `git diff` on key files to understand the actual changes.
@@ -42,7 +60,7 @@ Verify against bead descriptions:
 - Were any beads only partially implemented?
 - Were changes made that weren't in any bead? (scope creep)
 
-### 3. Run tests
+### 4. Run tests
 
 Run the project's test suite (check `CONTEXT.md` or `bd recall test-command` for the exact command).
 
@@ -53,7 +71,7 @@ If tests fail:
 
 If tests pass, note the count and move on.
 
-### 4. Trace the data path
+### 5. Trace the data path
 
 Before testing individual scenarios, map the complete data flow for the new feature. This catches wiring bugs that unit tests miss (tests often construct inputs directly, bypassing real loading/routing).
 
@@ -67,7 +85,7 @@ Report the data path in the verification table with a dedicated row, e.g.:
 |---|---|---|---|
 | Data flows from YAML config -> get_config() -> route -> compute() | field present at each step | get_config() drops the key | FAIL |
 
-### 5. Functional verification
+### 6. Functional verification
 
 This is the core of validation — do NOT skip it. Unit tests verify code correctness, not feature correctness.
 
@@ -104,7 +122,7 @@ Report findings as a table. At least one row must come from an actual HTTP respo
 | Happy path (live request) | field = 5.0 | HTTP response shows field = 5.0 | PASS |
 | Data path integrity | config -> route -> compute | verified at each handoff | PASS |
 
-### 6. Architectural review
+### 7. Architectural review
 
 Apply the [deep module lens](../improve-codebase-architecture/LANGUAGE.md):
 
@@ -115,7 +133,7 @@ Apply the [deep module lens](../improve-codebase-architecture/LANGUAGE.md):
 
 Flag issues but don't block on them — architectural improvements are separate beads, not blockers for the current feature.
 
-### 7. Report
+### 8. Report
 
 Present a structured report:
 
@@ -159,7 +177,7 @@ SHIP / FIX / SEND BACK
 - What needs to change at the planning level
 ```
 
-### 8. Create beads for gaps
+### 9. Create beads for gaps
 
 For any issue found:
 - Critical: create bead with priority 1
@@ -170,7 +188,7 @@ Close beads that are fully verified. Update partially-complete beads with notes 
 
 For larger bead hygiene issues (many stale beads, dependency tangles), hand off to `/bead-review`.
 
-### 9. Auto-generate fix beads (if FIX)
+### 10. Auto-generate fix beads (if FIX)
 
 When the recommendation is **FIX**, automatically generate fix beads:
 
@@ -185,7 +203,7 @@ When the recommendation is **FIX**, automatically generate fix beads:
 
 This closes the loop: `/validate` -> fix beads -> `/implement` -> `/validate` again.
 
-### 10. Explain design issues (if SEND BACK)
+### 11. Explain design issues (if SEND BACK)
 
 When the recommendation is **SEND BACK**, the problem is at the design level — re-implementing won't fix it. Do NOT generate fix beads. Instead:
 
@@ -196,6 +214,6 @@ When the recommendation is **SEND BACK**, the problem is at the design level —
 
 The user takes this back to `/plan-feature` for re-scoping. The planner produces new beads, then the cycle restarts.
 
-### 11. Update CONTEXT.md
+### 12. Update CONTEXT.md
 
 If the implementation introduced new domain concepts or changed existing ones, update `CONTEXT.md` using [CONTEXT-FORMAT.md](../grill-with-docs/CONTEXT-FORMAT.md).

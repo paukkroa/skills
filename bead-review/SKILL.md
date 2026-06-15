@@ -14,6 +14,7 @@ Standalone bead management. Review status, update beads, manage dependencies, fi
 2. **Do NOT write code.** If beads need implementation, hand off to `/implement`.
 3. **Max 2 exploration attempts** per question. If codebase exploration doesn't answer it, ask the user.
 4. **All bead operations use `bd` CLI.** No TodoWrite, TaskCreate, or markdown TODOs.
+5. **Worktree awareness.** You may be running in a git worktree. Check file existence using repo-relative paths from `pwd`. If `bd` commands fail, the `.dolt/` directory may be in the main repo — symlink it: `ln -s "$(git rev-parse --git-dir | sed 's|/\.git/worktrees/.*||')/.dolt" .dolt`
 
 ## Process
 
