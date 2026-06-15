@@ -22,19 +22,23 @@ Execute an implementation from beads. You are the coding agent — read the bead
 
 ### 1. Worktree setup
 
-Check if you are in a git worktree:
+Determine your working root — all subsequent steps use this directory:
 
 ```bash
+WORK_ROOT="$(pwd)"
 git rev-parse --git-dir
 ```
 
-If the output is an absolute path containing `/worktrees/` (e.g. `/path/to/main/.git/worktrees/feature-x`), you are in a worktree. In that case:
+If the output is an absolute path containing `/worktrees/`, you are in a git worktree. The worktree root IS your `$WORK_ROOT`. The main repo is a DIFFERENT directory — do NOT run commands there.
 
-- **All file paths are relative to `pwd`.** Bead specs use repo-relative paths (e.g. `src/auth/models.py`). These resolve correctly from the worktree root.
-- **Run all commands from `pwd`.** Tests, build, lint — everything runs from the worktree directory.
-- **Beads database.** If `bd list` fails (database not found), the `.dolt/` directory is in the main repo. Symlink it: `ln -s "$(git rev-parse --git-dir | sed 's|/\.git/worktrees/.*||')/.dolt" .dolt` — or ask the user.
+**Critical rules when in a worktree:**
 
-If the output is `.git`, you are in the main repo. No special handling needed.
+- **NEVER `cd` to the main repo.** All commands run from `$WORK_ROOT`.
+- **If `bd recall test-command` or `CONTEXT.md` returns a command with an absolute path to the main repo, IGNORE the absolute path.** Run the command from `$WORK_ROOT` instead. For example, if the stored command is `cd /Users/joe/project && pytest`, just run `pytest` from `$WORK_ROOT`.
+- **Read and edit files from `$WORK_ROOT`.** When a bead says `src/auth/models.py`, that means `$WORK_ROOT/src/auth/models.py`.
+- **Beads database.** If `bd list` fails (database not found), symlink: `ln -s "$(git rev-parse --git-dir | sed 's|/\.git/worktrees/.*||')/.dolt" .dolt`
+
+If the output is `.git`, you are in the main repo. No special handling needed — `$WORK_ROOT` is the repo root.
 
 ### 2. Load beads
 
@@ -51,8 +55,8 @@ Read `CONTEXT.md` for domain vocabulary and architecture context.
 Before writing any code:
 
 - Run `bd show <id>` for each task bead — verify they exist and are open
-- Check that files referenced in bead descriptions still exist at the expected paths
-- Run the test suite to establish a passing baseline (check `CONTEXT.md` or `bd recall test-command` for the exact command)
+- Check that files referenced in bead descriptions still exist at the expected paths (relative to `$WORK_ROOT`)
+- Run the test suite **from `$WORK_ROOT`** to establish a passing baseline (check `CONTEXT.md` or `bd recall test-command` for the command name — strip any absolute paths and run from `$WORK_ROOT`)
 - Note the test count — you must not reduce it
 - Check for a test harness bead: look for a bead titled "Test harness for ..." in `bd list --status=open`. If one exists:
   - Tests were pre-written by `/write-tests`. Your job is to make them pass (red->green).
@@ -71,7 +75,7 @@ Follow the execution order from `bd graph`. For each task bead:
 
 **Implement:** Follow the numbered steps in the bead's "What to do" section. Use existing patterns — the bead points to examples in the codebase. Follow them exactly.
 
-**Verify:** Run the project's test suite after each bead.
+**Verify:** Run the project's test suite **from `$WORK_ROOT`** after each bead.
 - If a test harness exists: the target is making pre-written tests pass. Check which tests for THIS bead have turned green. Do NOT modify test assertions.
 - If no test harness exists: write your own tests as before.
 - All previously passing tests must continue to pass.
@@ -96,7 +100,7 @@ When a test harness exists, each layer should turn more pre-written tests green.
 
 After all beads are closed:
 
-- Run the full test suite one final time
+- Run the full test suite **from `$WORK_ROOT`** one final time
 - Verify test count hasn't decreased
 - Run `bd list --status=in_progress` — should be empty
 - List all files modified for the user's review

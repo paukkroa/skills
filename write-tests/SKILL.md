@@ -26,20 +26,24 @@ Read beads produced by `/plan-feature` and write tests BEFORE any implementation
 
 ### 1. Worktree setup
 
-Check if you are in a git worktree:
+Determine your working root — all subsequent steps use this directory:
 
 ```bash
+WORK_ROOT="$(pwd)"
 git rev-parse --git-dir
 ```
 
-If the output is an absolute path containing `/worktrees/` (e.g. `/path/to/main/.git/worktrees/feature-x`), you are in a worktree. In that case:
+If the output is an absolute path containing `/worktrees/`, you are in a git worktree. The worktree root IS your `$WORK_ROOT`. The main repo is a DIFFERENT directory — do NOT run commands there.
 
-- **All file paths are relative to `pwd`.** Bead specs use repo-relative paths. These resolve correctly from the worktree root.
-- **Create stubs and test files relative to `pwd`.** Never use absolute paths.
-- **Run all commands from `pwd`.** Tests, linters — everything runs from the worktree directory.
-- **Beads database.** If `bd list` fails (database not found), the `.dolt/` directory is in the main repo. Symlink it: `ln -s "$(git rev-parse --git-dir | sed 's|/\.git/worktrees/.*||')/.dolt" .dolt` — or ask the user.
+**Critical rules when in a worktree:**
 
-If the output is `.git`, you are in the main repo. No special handling needed.
+- **NEVER `cd` to the main repo.** All commands run from `$WORK_ROOT`.
+- **If `bd recall test-command` or `CONTEXT.md` returns a command with an absolute path to the main repo, IGNORE the absolute path.** Run the command from `$WORK_ROOT` instead.
+- **Create stubs and test files relative to `$WORK_ROOT`.** When a bead says `src/auth/tokens.py`, write to `$WORK_ROOT/src/auth/tokens.py`.
+- **Run the test suite from `$WORK_ROOT`.**
+- **Beads database.** If `bd list` fails (database not found), symlink: `ln -s "$(git rev-parse --git-dir | sed 's|/\.git/worktrees/.*||')/.dolt" .dolt`
+
+If the output is `.git`, you are in the main repo. No special handling needed — `$WORK_ROOT` is the repo root.
 
 ### 2. Load context
 
@@ -59,7 +63,7 @@ Before writing anything, understand how this project tests:
 - **Test location**: `tests/`, `__tests__/`, co-located `*.test.*`, `*_test.go`, etc.
 - **Test naming**: how existing tests name files, classes, functions.
 - **Fixtures and helpers**: existing conftest.py, test factories, builders, shared setup. Reuse these — do not create parallel infrastructure.
-- **Test runner command**: the exact command to run tests. Verify it works now by running the existing suite.
+- **Test runner command**: the exact command to run tests. Verify it works now by running the existing suite **from `$WORK_ROOT`** (strip any absolute paths from the stored command).
 
 If the project has no test infrastructure at all, ask the user which framework to use (suggest the most common for the language/framework), create the minimal test config, and record the command in `bd remember test-command "<cmd>"`.
 
@@ -127,7 +131,7 @@ Follow the execution order from `bd graph`. For each task bead:
 - Add new test functions for new behavior. Do NOT modify existing test assertions.
 - If existing tests will break due to interface changes, note them in the test harness metadata but do NOT change them — the implementer handles test migration.
 
-**Verify red:** Run the test suite. Every new test MUST fail. If any new test passes:
+**Verify red:** Run the test suite **from `$WORK_ROOT`**. Every new test MUST fail. If any new test passes:
 - The stub has logic it shouldn't -> fix the stub
 - The test isn't testing new behavior -> rewrite the test
 
@@ -180,8 +184,8 @@ bd dep add <feature-bead-id> <test-harness-bead-id>
 
 ### 9. Final verification
 
-- Run the full test suite one final time.
-- Existing tests: all pass (count matches baseline from step 2).
+- Run the full test suite **from `$WORK_ROOT`** one final time.
+- Existing tests: all pass (count matches baseline from step 3).
 - New tests: all fail with `NotImplementedError` or equivalent — not import errors, not syntax errors. Clean failures only.
 - List all files created/modified for the user's review.
 

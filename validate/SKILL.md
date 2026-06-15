@@ -28,20 +28,24 @@ Review completed implementation against the original bead specs. Focus is **func
 
 ### 1. Worktree setup
 
-Check if you are in a git worktree:
+Determine your working root — all subsequent steps use this directory:
 
 ```bash
+WORK_ROOT="$(pwd)"
 git rev-parse --git-dir
 ```
 
-If the output is an absolute path containing `/worktrees/` (e.g. `/path/to/main/.git/worktrees/feature-x`), you are in a worktree. In that case:
+If the output is an absolute path containing `/worktrees/`, you are in a git worktree. The worktree root IS your `$WORK_ROOT`. The main repo is a DIFFERENT directory — do NOT run commands there.
 
-- **All file paths are relative to `pwd`.** Bead specs use repo-relative paths. These resolve correctly from the worktree root.
-- **Run tests, server, and log checks from `pwd`.** The worktree has the full working tree.
-- **Use `git diff` normally.** Git commands work correctly in worktrees.
-- **Beads database.** If `bd list` fails (database not found), the `.dolt/` directory is in the main repo. Symlink it: `ln -s "$(git rev-parse --git-dir | sed 's|/\.git/worktrees/.*||')/.dolt" .dolt` — or ask the user.
+**Critical rules when in a worktree:**
 
-If the output is `.git`, you are in the main repo. No special handling needed.
+- **NEVER `cd` to the main repo.** All commands run from `$WORK_ROOT`.
+- **If `bd recall test-command` or `CONTEXT.md` returns a command with an absolute path to the main repo, IGNORE the absolute path.** Run the command from `$WORK_ROOT` instead. For example, if the stored command is `cd /Users/joe/project && pytest`, just run `pytest` from `$WORK_ROOT`.
+- **Read files from `$WORK_ROOT`.** When a bead says `src/auth/models.py`, read `$WORK_ROOT/src/auth/models.py` — not the main repo copy.
+- **Start the server from `$WORK_ROOT`.** The worktree has the feature branch code. The main repo does NOT.
+- **Beads database.** If `bd list` fails (database not found), symlink: `ln -s "$(git rev-parse --git-dir | sed 's|/\.git/worktrees/.*||')/.dolt" .dolt`
+
+If the output is `.git`, you are in the main repo. No special handling needed — `$WORK_ROOT` is the repo root.
 
 ### 2. Gather context
 
@@ -62,7 +66,7 @@ Verify against bead descriptions:
 
 ### 4. Run tests
 
-Run the project's test suite (check `CONTEXT.md` or `bd recall test-command` for the exact command).
+Run the project's test suite **from `$WORK_ROOT`** (check `CONTEXT.md` or `bd recall test-command` for the command name, but always run it from `$WORK_ROOT` — never `cd` elsewhere). If the recalled command contains an absolute path, strip it and run the test runner directly.
 
 If tests fail:
 - Read the failure output
@@ -89,7 +93,7 @@ Report the data path in the verification table with a dedicated row, e.g.:
 
 This is the core of validation — do NOT skip it. Unit tests verify code correctness, not feature correctness.
 
-**Start the local server.** This is mandatory, not optional. Use the project's run command (check `CONTEXT.md` or `bd recall run-command`). If the server won't start, that's a finding — report it.
+**Start the local server from `$WORK_ROOT`.** This is mandatory, not optional. Use the project's run command (check `CONTEXT.md` or `bd recall run-command`) but run it from `$WORK_ROOT`. The worktree has the feature branch code — that's what you're validating. If the server won't start, that's a finding — report it.
 
 **Make real requests.** Hit the actual endpoint with inputs that exercise the new feature. Check the response for the new fields/behavior. At minimum:
 - One happy-path request with expected inputs — verify the response contains the new data
@@ -97,7 +101,7 @@ This is the core of validation — do NOT skip it. Unit tests verify code correc
 
 **Check against Acceptance Criteria:** Read the feature bead's Acceptance Criteria section and verify each assertion. These are the primary pass/fail criteria.
 
-**Inspect logs.** After making requests, check server logs for:
+**Inspect logs from `$WORK_ROOT`.** After making requests, check server logs (relative to `$WORK_ROOT`) for:
 - Expected log entries from the new code path
 - Unexpected errors or warnings
 - Signs that the new code path wasn't actually exercised (missing expected logs)
