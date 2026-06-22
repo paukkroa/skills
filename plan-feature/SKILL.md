@@ -114,6 +114,20 @@ If new domain terms were resolved during grilling, update `CONTEXT.md` inline us
 
 When a design decision during grilling is hard to reverse, surprising without context, and the result of a real trade-off — record it as a decision file in `docs/decisions/`. See [CONTEXT-FORMAT.md](../grill-with-docs/CONTEXT-FORMAT.md) for the file format and numbering.
 
+### 8. Commit and push documentation changes
+
+If steps 6 or 7 created or modified files (CONTEXT.md, decision files in `docs/decisions/`), stage, commit, and push them:
+
+```bash
+git add CONTEXT.md docs/decisions/
+git commit -m "docs: update domain glossary and decisions for <feature name>"
+git push
+```
+
+If the push fails because no upstream is set, use `git push -u origin $(git branch --show-current)`.
+
+Only commit documentation files — never code, stubs, or tests.
+
 ## Final message
 
 ### If open questions remain
