@@ -189,7 +189,19 @@ bd dep add <feature-bead-id> <test-harness-bead-id>
 - New tests: all fail with `NotImplementedError` or equivalent — not import errors, not syntax errors. Clean failures only.
 - List all files created/modified for the user's review.
 
-### 10. Handoff
+### 10. Commit and push
+
+Stage all stub and test files, commit, and push to the feature branch:
+
+```bash
+git add <stub-files> <test-files>
+git commit -m "test: add failing tests and stubs for <feature name>"
+git push
+```
+
+If the push fails because no upstream is set, use `git push -u origin $(git branch --show-current)`.
+
+### 11. Handoff
 
 Provide both handoff formats:
 

@@ -105,6 +105,44 @@ After all beads are closed:
 - Run `bd list --status=in_progress` — should be empty
 - List all files modified for the user's review
 
+### 7. MR summary
+
+After final verification, generate a merge request summary and print it for the user. This is NOT a file — output it directly.
+
+**Format:**
+
+```
+## MR Summary
+
+### <type>(<scope>): <short description>
+
+**Feature bead:** <feature-bead-id>
+**Branch:** <current branch name>
+
+### Why
+
+<1-2 sentences: the problem being solved and why this approach was chosen. Pull from the feature bead's goal and design decisions.>
+
+### What changed
+
+<Bulleted list of high-level changes, organized by area. Mention specific files only when they clarify intent. Do NOT restate the diff.>
+
+### Testing
+
+<What tests were added or turned green. Include counts: "12 new tests passing, 0 regressions." Note if a pre-written test harness was used (red->green workflow).>
+
+### Review focus
+
+<1-3 specific areas where reviewer attention is most valuable. Complex logic, behavioral changes, or integration points.>
+```
+
+**Rules for the summary:**
+- Title uses conventional commits format: `feat`, `fix`, `refactor`, etc.
+- "Why" explains rationale — never restate what the diff already shows
+- "What changed" is high-level — think architecture, not line-by-line
+- Keep the entire summary under 30 lines
+- No filler text. Every sentence earns its place.
+
 ## Constraints
 
 These apply to every implementation:
