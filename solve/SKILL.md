@@ -29,7 +29,7 @@ Use `/plan-feature` → `/implement` when:
 ## Hard rules
 
 1. **Git commits allowed on feature branches only.** Before any `git add` / `git commit` / `git push`, run `git branch --show-current` and verify the branch is NOT `main`, `master`, `dev`, `stg`, `qa`, or `prod`. If on a protected branch, stop and tell the user to create a feature branch first. On a feature branch: stage, commit, and push freely.
-2. **Beads are the record.** Create beads for what you do. Future agents and humans read these to understand what happened. Lightweight is fine — but trackable.
+2. **Beads before code.** Create ALL beads (feature + tasks) BEFORE writing or modifying any code. No edits, no new files, no test changes until beads exist. Beads define the scope; implementation follows from them.
 3. **Grill only when blocked.** Do not interview the user for the sake of thoroughness. Explore the codebase first. Only ask when you face a genuine fork where the user's intent is ambiguous and the codebase does not resolve it.
 4. **Max 2 attempts** at any fix. If something is not working after 2 tries, describe the problem and stop.
 5. **Relative paths only in beads.** All file paths in bead descriptions MUST be relative to the repo root. NEVER absolute paths.
@@ -85,9 +85,11 @@ Do NOT grill for:
 - Trivial implementation details (pick the simpler option and go)
 - Theoretical edge cases unlikely to matter for a narrow fix
 
-### 4. Create beads
+### 4. Create beads BEFORE any code changes
 
-Create a feature bead and task bead(s) for what you are about to do. These are the record — not a planning exercise. Keep them proportional to the work.
+Create a feature bead and task bead(s) for what you are about to do. **No code may be written or modified until all beads for the work exist.** This is a hard gate — beads define the scope, and implementation follows from them.
+
+Keep beads proportional to the work.
 
 For a single-fix bug, one feature bead + one task bead is fine. For a small feature with 2-3 parts, one feature bead + 2-3 task beads.
 
@@ -144,17 +146,20 @@ Then implement bead by bead:
 - Make the changes. Follow existing patterns in the codebase.
 - Run tests after each bead. All previously passing tests must continue to pass.
 - Write or update tests for the new behavior.
-- `bd close <id>`
+
+Do NOT close beads during implementation. Beads stay in-progress until validation passes.
 
 If a bead touches multiple architectural layers, go layer by layer with test runs between each.
 
 ### 6. Verify and close
 
-After all task beads are closed:
+After all task beads are implemented:
 
 - Run the full test suite. Verify test count has not decreased.
 - If the issue was a bug: re-run the original failing scenario and confirm it now passes.
 - If the issue was a feature: verify the new behavior works as specified in the acceptance criteria.
+- Close all task beads: `bd close <id>` for each completed task bead.
+- Close the feature bead: `bd close <feature-id>`.
 - Run `bd list --status=in_progress` — should be empty.
 - List all modified files for the user.
 
