@@ -3,7 +3,7 @@ name: validate
 description: Validate a completed implementation against business requirements, beads, and CONTEXT.md. Runs tests, checks end-to-end behavior with the local server, reviews architectural alignment, and identifies gaps. Use when a coding agent (Codex) has finished work and you want to verify it before committing.
 model: sonnet
 effort: high
-allowed-tools: Bash(bd create *) Bash(bd update *) Bash(bd close *) Bash(bd dep *) Bash(bd show *) Bash(bd list *) Bash(bd ready *) Bash(bd graph *) Bash(bd remember *) Bash(bd recall *) Bash(bd prime *) Bash(bd doctor *) Bash(bd stale *) Bash(bd orphans *) Bash(bd blocked *) Bash(bd find-duplicates *) Bash(bd duplicate *) Bash(bd upgrade *) Bash(bd status *) Bash(git diff *) Bash(git log *) Bash(git branch *) Bash(git status *)
+allowed-tools: Agent Bash(bd create *) Bash(bd update *) Bash(bd close *) Bash(bd dep *) Bash(bd show *) Bash(bd list *) Bash(bd ready *) Bash(bd graph *) Bash(bd remember *) Bash(bd recall *) Bash(bd prime *) Bash(bd doctor *) Bash(bd stale *) Bash(bd orphans *) Bash(bd blocked *) Bash(bd find-duplicates *) Bash(bd duplicate *) Bash(bd upgrade *) Bash(bd status *) Bash(git diff *) Bash(git log *) Bash(git branch *) Bash(git status *)
 ---
 
 # Validate
@@ -63,6 +63,52 @@ Verify against bead descriptions:
 - Were all specified changes made?
 - Were any beads only partially implemented?
 - Were changes made that weren't in any bead? (scope creep)
+
+### 3.5. Launch code review sub-agent (background)
+
+Immediately after checking the diff, spawn a **background** code review agent. This runs in parallel with steps 4–7 so it doesn't block your work.
+
+Use the Agent tool **exactly as shown** — the `model: "sonnet"` flag is **MANDATORY**. Without it the sub-agent inherits the parent session model which may not be accessible. Never omit it.
+
+```
+Agent({
+  description: "Pure code review of diff",
+  model: "sonnet",
+  run_in_background: true,
+  name: "code-reviewer",
+  prompt: <see below>
+})
+```
+
+**Sub-agent prompt** (adapt the diff scope to match the feature branch):
+
+> You are a code reviewer. Review the output of `git diff` (staged + unstaged) in this repository for pure code quality issues.
+>
+> Focus on:
+> - Correctness bugs and logic errors
+> - Edge cases and boundary conditions
+> - Missing or incorrect error handling
+> - Security issues (injection, auth, data exposure)
+> - Performance and efficiency problems
+> - Naming clarity and code readability
+>
+> Do NOT consider:
+> - Design decisions, architecture, or whether the approach is right
+> - Bead specs, feature requirements, or acceptance criteria
+> - Style-only nits (formatting, import order)
+> - Pre-existing issues in unchanged code
+>
+> For each finding, return:
+> - **File** and **line number(s)**
+> - **Severity**: critical / major / minor
+> - **Description**: what's wrong and why it matters
+> - **Suggestion**: how to fix it
+>
+> If you find no issues, say "No code review issues found."
+>
+> Return your findings as a markdown list. Nothing else.
+
+Do NOT wait for the sub-agent here — continue with step 4 immediately. You will collect results in step 7.5.
 
 ### 4. Run tests
 
@@ -137,6 +183,17 @@ Apply the [deep module lens](../improve-codebase-architecture/LANGUAGE.md):
 
 Flag issues but don't block on them — architectural improvements are separate beads, not blockers for the current feature.
 
+### 7.5. Collect code review findings
+
+Before writing the report, collect the results from the code-reviewer sub-agent launched in step 3.5. If the agent is still running, wait for it.
+
+Review the findings:
+- **Deduplicate** against issues you already found in steps 4–7. If the code reviewer flagged the same issue you found via spec validation, keep only one entry (use the more detailed description).
+- **Discard false positives** — if a finding contradicts the bead spec's intended behavior, the spec wins. Note this as "dismissed — per spec" if worth mentioning.
+- **Keep genuine code quality issues** even if they don't relate to any bead. These are the sub-agent's unique value — bugs that spec-based validation would miss.
+
+Carry surviving findings into the report's Code Review section (step 8).
+
 ### 8. Report
 
 Present a structured report:
@@ -151,6 +208,11 @@ Present a structured report:
 ### Functional Verification
 | Scenario | Expected | Actual | Status |
 |---|---|---|---|
+
+### Code Review (from independent sub-agent)
+| File | Line(s) | Severity | Issue | Suggestion |
+|---|---|---|---|---|
+<or "No independent code review issues found (all duplicated spec-based findings above).">
 
 ### Bead Status
 - <bead-id>: COMPLETE / PARTIAL / NOT STARTED
@@ -183,8 +245,9 @@ SHIP / FIX / SEND BACK
 
 ### 9. Create beads for gaps
 
-For any issue found:
+For any issue found (from both spec-based validation AND the code review sub-agent):
 - Critical: create bead with priority 1
+- Major (code review): create bead with priority 2
 - Minor: create bead with priority 3
 - Architectural: create bead with priority 4
 
