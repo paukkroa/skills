@@ -21,6 +21,7 @@ Read beads produced by `/plan-feature` and write tests BEFORE any implementation
 8. **Git commits allowed on feature branches only.** Before any `git add` / `git commit` / `git push`, run `git branch --show-current` and verify the branch is NOT `main`, `master`, `dev`, `stg`, `qa`, or `prod`. If on a protected branch, stop and tell the user to create a feature branch first. On a feature branch: stage, commit, and push freely.
 9. **Follow existing test patterns exactly.** Use the project's test framework, directory structure, naming conventions, and fixture patterns. Explore before writing.
 10. **Worktree awareness.** You may be running in a git worktree. All file paths are relative to repo root. Create stubs and tests at repo-relative paths from `pwd`. Run all commands from the current working directory. See "Worktree setup" in the Process section.
+11. **ALWAYS run tests from `pwd`.** Never `cd` to another directory to run tests. If a stored test command contains an absolute path (e.g. `cd /Users/joe/project && pytest`), strip the `cd` and path — run only the test runner command itself from your current working directory. This is the single most common failure mode of this skill.
 
 ## Process
 

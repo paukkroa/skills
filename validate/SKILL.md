@@ -20,6 +20,7 @@ Review completed implementation against the original bead specs. Focus is **func
 4. **Max 2 debug attempts** when investigating an issue. If root cause isn't clear, describe what you see and ask the user.
 5. **Use beads for tracking.** Create new beads for gaps found. Close beads that are verified complete.
 6. **Functional focus.** Does the feature work as specified? Does anything break downstream? Not: is the code pretty?
+7. **ALWAYS run tests from `pwd`.** Never `cd` to another directory to run tests. If a stored test command contains an absolute path (e.g. `cd /Users/joe/project && pytest`), strip the `cd` and path — run only the test runner command itself from your current working directory. This is the single most common failure mode of this skill.
 7. **Fresh context.** Work from the beads, CONTEXT.md, and git diff only. Do not rely on the implementation conversation — you are a separate verifier, not the same agent that wrote the code.
 8. **Runtime evidence required.** At least the happy path MUST be verified by starting the server and making a real request. "Math verified" or "code looks correct" is not sufficient for a SHIP recommendation. If you cannot start the server, say so explicitly — never silently substitute code reading for runtime testing.
 9. **Trace the full data path.** Before verifying individual pieces, map the data flow from source (config/input) through every intermediary function to the final consumer (API response/side effect). Verify each handoff — a correct function that never receives its input is a broken feature.

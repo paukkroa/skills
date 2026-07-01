@@ -83,6 +83,13 @@ Follow the execution order from `bd graph`. For each task bead:
 
 **Close:** `bd close <id>`
 
+**Commit:** After closing the bead, stage and commit the changes for this bead:
+```bash
+git add <files-changed-in-this-bead>
+git commit -m "<type>(<scope>): <what this bead implemented>"
+```
+Use conventional commits format. Scope is the module/area. Keep the message concise. Do NOT push yet — push happens once at the end after all beads are done.
+
 ### 5. Layer-by-layer for cross-cutting changes
 
 When a bead touches multiple architectural layers (models, scorers, routes, config, tests):
