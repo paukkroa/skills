@@ -17,6 +17,8 @@ Convert business requirements into implementation-ready beads. Output is a featu
 4. **Max 2 exploration attempts** per question. If codebase exploration doesn't answer it, ask the user.
 5. **Use beads for ALL task tracking.** No TodoWrite, TaskCreate, or markdown TODOs.
 6. **Relative paths only in beads.** All file paths in bead descriptions MUST be relative to the repo root (e.g. `src/auth/models.py`). NEVER absolute paths. Agents may work in git worktrees where absolute paths point to the wrong directory.
+7. **Favor the architecturally-correct design over the minimal diff.** When a requirement is awkward to satisfy within the current structure, the default answer is NOT the smallest change that makes it compile. Ask _"what is best for this codebase architecturally, even if it requires refactoring existing code?"_ and plan that. A plan whose central move is a symptom-level workaround (see the red flags in step 3) is a planning failure — even if it "works." Naming a larger refactor and letting the user decide beats silently shipping a patch that leaks debt.
+8. **Verify the dependency graph before handoff.** A reversed dependency edge is what makes an implementer pick up the wrong bead and produce a partial implementation. After wiring dependencies you MUST run the verification in step 5 (`bd dep cycles`, `bd dep tree`, `bd ready`) and confirm the intended starting bead — and only it — is READY.
 
 ## Process
 
@@ -39,6 +41,7 @@ Interview the user **one question at a time**, walking down each branch of the d
 
 Focus areas:
 - **Where does this live architecturally?** Use the [deep module lens](../improve-codebase-architecture/LANGUAGE.md): depth, seams, locality, leverage. Apply the deletion test to proposed new modules.
+- **What's the RIGHT design, not just a working one?** Actively ask _"if I were building this part of the codebase from scratch today, how would it be shaped?"_ Then plan toward that shape. If the clean design requires refactoring existing code (widening a model, moving a seam, unifying two representations), name that refactor as a bead — do not route around it with a bolt-on. "Minimal" and "careful" are not the goal; correct locality is. A change that touches more files but leaves every module deep beats a one-line change that leaks a cross-cutting concern into a deep module.
 - **What's the fallback chain?** Every external call needs a degradation path.
 - **What changes for each user state?** Anonymous, opt-out, personalized, error.
 - **What's the cache/performance story?** TTLs, warming, stale-while-revalidate.
@@ -52,6 +55,16 @@ Before creating beads, evaluate the structural impact using the [deep module pri
 - Does it split tightly-coupled logic across seams?
 - Could existing modules absorb this without interface growth?
 - Apply the deletion test to any new module being proposed.
+
+**Workaround red flags — if the plan relies on any of these, stop and redesign.** Each is a symptom of forcing a requirement through the wrong seam. The right move is almost always to change the model or the seam, not to smuggle data past it:
+
+- **Writing a field a library/model doesn't declare** (`object.__setattr__`, monkey-patching, `extra="forbid"` bypass, casting to `any` to attach a property). If a consumer needs a signal, the signal belongs in the interface the consumer actually reads — or the plan should model the thing properly. A field nobody reads is a silent no-op that _looks_ done.
+- **A parallel mechanism that duplicates something the codebase already does.** Before inventing a "featured X" / "special-case Y" path, ask whether an existing first-class concept (a component, a rule, an existing seam) already carries that behavior. Reuse the concept; don't grow a second one beside it.
+- **Modifying a shared contract/interface to carry one caller's bespoke need** — especially one crossing a repo/library boundary or one that future adapters (remote services, alternate implementations) would each have to re-support. Prefer expressing the need through the already-defined interface.
+- **Leaking a cross-cutting concern (visibility, auth, tenancy) into a deep module** by adding flags every downstream stage must now check. Prefer set-aside/restore or a single seam over sprinkling `if is_visible` across the pipeline.
+- **A change that satisfies the acceptance criterion literally but not functionally** — data flows in and is never consumed, or the "winner" is computed but nothing acts on it. Trace every new field to a real consumer before writing the bead.
+
+For each red flag the plan can't avoid, write the proper refactor as a bead and record the trade-off in `docs/decisions/` (step 7). If a genuinely-correct design is blocked by an external constraint (e.g. a library field that doesn't exist yet), the bead must say so explicitly and specify a documented no-op plus a follow-up bead — never an invented API surface that appears to work.
 
 ### 4. Create the feature bead
 
@@ -94,15 +107,45 @@ Each task bead includes:
 - `--type` — task/bug
 - `--priority` — 0-4 (not high/medium/low)
 
-Set up dependencies with `bd dep add`.
+**Wiring dependencies — get the direction right the first time.** A reversed edge makes the implementer claim the wrong bead and ship a partial implementation. `bd dep` has two equivalent forms; they take arguments in OPPOSITE orders, which is the single most common mistake:
 
-Present the dependency graph:
 ```
-bead-xxx  Description
-  ├── bead-yyy  Description
-  │     └── bead-zzz  Description
-  └── bead-aaa  Description
+bd dep <blocker> --blocks <blocked>     # blocker blocks blocked  ← prefer this form; it reads left-to-right
+bd dep add <blocked> <blocker>          # blocked depends on blocker  ← note: REVERSED argument order
 ```
+
+Both express the same edge: `<blocker>` must be done before `<blocked>` can start. **Always use the `--blocks` form** — its argument order matches the sentence "the foundation blocks the thing built on top of it," so it's far harder to invert.
+
+Direction rule: the **foundation** (model changes, shared types, the thing everything else imports) is the blocker; it blocks the work that builds on it. The **feature bead** is blocked by everything (it's the leaf that "completes" last). Example, foundation → downstream → feature:
+
+```bash
+bd dep <model-bead> --blocks <rule-bead>       # model blocks the rule that uses it
+bd dep <rule-bead>  --blocks <config-bead>     # rule blocks the config that wires it
+bd dep <config-bead> --blocks <tests-bead>     # config blocks the e2e tests
+bd dep <tests-bead> --blocks <feature-bead>    # everything blocks the feature bead
+```
+
+For bulk wiring, pass `--no-cycle-check` on each `bd dep` call, then verify once at the end (below).
+
+**Verify the graph before handoff (mandatory — hard rule 8).** Reversed edges and cycles are silent until an implementer trips on them:
+
+```bash
+bd dep cycles                    # must report no cycles
+bd dep tree <feature-bead-id>    # eyeball that foundation is at the bottom, feature at the top
+bd ready                         # ONLY the intended starting bead(s) should appear as ready
+```
+
+If a bead you expected to be startable is missing from `bd ready`, or an unexpected one appears, an edge is reversed — fix it with `bd dep remove` and re-add before continuing. Do not produce the handoff until `bd ready` shows exactly the starting bead(s) you intend.
+
+Present the dependency graph to the user (foundation at the leaves, feature at the root):
+```
+bead-xxx  Feature
+  └── bead-aaa  Config/wiring
+        └── bead-yyy  Rule/logic
+              └── bead-zzz  Model/foundation  [READY]
+```
+
+**Handoff names the READY bead, not the feature bead, as the starting point.** The implementer starts from what `bd ready` returns (the foundation), not the feature bead (which is blocked). Telling the implementer to "start with the feature bead" is how they pick up work that isn't unblocked yet. State explicitly: "Start with `<ready-bead-id>`; run `bd ready` after each close to get the next unblocked bead."
 
 For standalone bead review/cleanup without planning a new feature, use `/bead-review`.
 
@@ -155,13 +198,15 @@ BEAD
 )"
 ```
 
-**Set it to block all task beads** so implementation cannot start until the questions are resolved:
+**Set it to block all task beads** so implementation cannot start until the questions are resolved. The open-questions bead is the BLOCKER (it must be resolved before any task starts), so it goes on the left of `--blocks`:
 
 ```bash
-bd dep add <open-questions-bead-id> <task-bead-id-1>
-bd dep add <open-questions-bead-id> <task-bead-id-2>
+bd dep <open-questions-bead-id> --blocks <task-bead-id-1>
+bd dep <open-questions-bead-id> --blocks <task-bead-id-2>
 ...
 ```
+
+Verify with `bd ready` — while open questions exist, NO task bead should appear as ready. If a task bead is still ready, the edge is reversed.
 
 Present the open questions list in conversation so the user can take it to stakeholders.
 

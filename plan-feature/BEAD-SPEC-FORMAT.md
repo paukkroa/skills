@@ -88,7 +88,14 @@ BEAD
 
 ## Execution order
 
-Modeled entirely by bead dependencies. Use `bd dep add <blocker-id> <blocked-id>` to establish order. `bd graph` shows the full dependency tree.
+Modeled entirely by bead dependencies. **Direction matters and the two command forms take reversed argument orders** — use the `--blocks` form, which reads left-to-right:
+
+```
+bd dep <blocker-id> --blocks <blocked-id>    # blocker must be done before blocked can start
+bd dep add <blocked-id> <blocker-id>         # SAME edge, REVERSED args — easy to get wrong
+```
+
+The foundation (model/shared types) is the blocker; the feature bead is blocked by everything. After wiring, verify with `bd dep cycles` (no cycles), `bd dep tree <feature-id>` (foundation at the bottom), and `bd ready` (only the intended starting bead is ready). `bd graph` shows the full dependency tree.
 
 ## Test Harness (added by `/write-tests`)
 
